@@ -1,5 +1,7 @@
 package im.actor.crypto.blocks;
 
+import im.actor.crypto.blocks.impl.ByteStrings;
+
 public class PFR {
     public static byte[] calculate(byte[] secret, String label, byte[] seed) {
         // PRF(secret: bytes, label: string, seed: bytes) = P_SHA256(secret, bytes(label) + seed);

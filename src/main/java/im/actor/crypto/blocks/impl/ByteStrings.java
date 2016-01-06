@@ -1,4 +1,4 @@
-package im.actor.crypto.blocks;
+package im.actor.crypto.blocks.impl;
 
 public class ByteStrings {
 
@@ -23,17 +23,5 @@ public class ByteStrings {
             }
         }
         return res;
-    }
-
-    public static boolean isEquals(byte[] data1, byte[] data2) {
-        if (data1.length != data2.length) {
-            return false;
-        }
-        for (int i = 0; i < data1.length; i++) {
-            if (data1[i] != data2[i]) {
-                return false;
-            }
-        }
-        return true;
     }
 }
