@@ -27,7 +27,9 @@ public class TestKuznechik {
         };
 
         byte[] encText = Kuznechik.encryptBlock(key, testPlainText);
+        byte[] decText = Kuznechik.decryptBlock(key, encText);
 
         assertArrayEquals(encText, testCipherText);
+        assertArrayEquals(decText, testPlainText);
     }
 }

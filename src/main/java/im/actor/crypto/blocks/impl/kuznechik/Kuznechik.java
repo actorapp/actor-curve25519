@@ -11,7 +11,9 @@ public class Kuznechik {
         // w128_t x;
         // x.q[0] = ((uint64_t *) blk)[0];
         // x.q[1] = ((uint64_t *) blk)[1];
-        Kuz128 x = new Kuz128(data);
+        Kuz128 x = new Kuz128();
+        x.setQ(0, ByteStrings.bytesToLong(data));
+        x.setQ(1, ByteStrings.bytesToLong(data, 8));
 
         for (int i = 0; i < 9; i++) {
             // x.q[0] ^= key->k[i].q[0];
@@ -33,6 +35,40 @@ public class Kuznechik {
         return ByteStrings.merge(
                 ByteStrings.longToBytes(x.getQ(0) ^ intKey.getK()[9].getQ(0)),
                 ByteStrings.longToBytes(x.getQ(1) ^ intKey.getK()[9].getQ(1))
+        );
+    }
+
+    // void kuz_decrypt_block(kuz_key_t *key, void *blk)
+    public static byte[] decryptBlock(byte[] key, byte[] data) {
+        KuzIntKey intKey = convertKey(key);
+
+        // w128_t x;
+        // x.q[0] = ((uint64_t *) blk)[0] ^ key->k[9].q[0];
+        // x.q[1] = ((uint64_t *) blk)[1] ^ key->k[9].q[1];
+        Kuz128 x = new Kuz128();
+        x.setQ(0, ByteStrings.bytesToLong(data) ^ intKey.getK()[9].getQ(0));
+        x.setQ(1, ByteStrings.bytesToLong(data, 8) ^ intKey.getK()[9].getQ(1));
+
+        for (int i = 8; i >= 0; i--) {
+            // kuz_l_inv(&x);
+            KuznechikMath.kuz_l_inv(x);
+
+            for (int j = 0; j < 16; j++) {
+                // x.b[j] = kuz_pi_inv[x.b[j]];
+                x.getB()[j] = KuznechikTables.kuz_pi_inv[x.getB()[j] & 0xFF];
+            }
+
+            // x.q[0] ^= key->k[i].q[0];
+            x.setQ(0, x.getQ(0) ^ intKey.getK()[i].getQ(0));
+            // x.q[1] ^= key->k[i].q[1];
+            x.setQ(1, x.getQ(1) ^ intKey.getK()[i].getQ(1));
+        }
+
+        // ((uint64_t *) blk)[0] = x.q[0];
+        // ((uint64_t *) blk)[1] = x.q[1];
+        return ByteStrings.merge(
+                ByteStrings.longToBytes(x.getQ(0)),
+                ByteStrings.longToBytes(x.getQ(1))
         );
     }
 

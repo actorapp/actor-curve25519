@@ -16,7 +16,7 @@ class KuznechikMath {
         // while (y) {
         while ((y & 0xFF) != 0) {
             // if (y & 1)
-            if (y == 1) {
+            if ((y & 1) != 0) {
                 // z ^= x;
                 z ^= x;
             }
