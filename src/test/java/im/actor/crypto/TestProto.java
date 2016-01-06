@@ -49,6 +49,25 @@ public class TestProto {
             random.nextBytes(randomBytes);
             byte[] verifySig = curve25519.calculateSignature(randomBytes, bobKey.getPrivateKey(), bobVerify);
             assertTrue(curve25519.verifySignature(bobKey.getPublicKey(), aliceVerify, verifySig));
+
+            // Building Parameters
+            byte[] client_write_mac_key = ByteStrings.substring(aliceMaster, 0, 32);
+            byte[] server_write_mac_key = ByteStrings.substring(aliceMaster, 32, 32);
+            byte[] client_write_key = ByteStrings.substring(aliceMaster, 64, 32);
+            byte[] server_write_key = ByteStrings.substring(aliceMaster, 96, 32);
+            byte[] client_write_iv = ByteStrings.substring(aliceMaster, 128, 32);
+            byte[] server_write_iv = ByteStrings.substring(aliceMaster, 160, 32);
         }
+    }
+
+    @Test
+    public void testProtoEncryption() {
+
+        // Master key of a connection
+        SecureRandom random = new SecureRandom();
+        byte[] masterKey = new byte[256];
+        random.nextBytes(masterKey);
+
+
     }
 }
