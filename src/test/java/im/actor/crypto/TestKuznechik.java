@@ -1,7 +1,10 @@
 package im.actor.crypto;
 
-import im.actor.crypto.blocks.impl.kuznechik.Kuznechik;
+import im.actor.crypto.impl.block.CBCCipher;
+import im.actor.crypto.impl.kuznechik.KuznechikCipher;
 import org.junit.Test;
+
+import java.security.SecureRandom;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -26,10 +29,55 @@ public class TestKuznechik {
                 (byte) 0x5A, (byte) 0x46, (byte) 0x8D, (byte) 0x42, (byte) 0xB9, (byte) 0xD4, (byte) 0xED, (byte) 0xCD
         };
 
-        byte[] encText = Kuznechik.encryptBlock(key, testPlainText);
-        byte[] decText = Kuznechik.decryptBlock(key, encText);
+        KuznechikCipher cipher = new KuznechikCipher(key);
+        byte[] encText = new byte[16];
+        byte[] decText = new byte[16];
+        cipher.encryptBlock(testPlainText, 0, encText, 0);
+        cipher.decryptBlock(encText, 0, decText, 0);
 
         assertArrayEquals(encText, testCipherText);
         assertArrayEquals(decText, testPlainText);
+    }
+
+    @Test
+    public void testRandomEncryption() {
+        SecureRandom secureRandom = new SecureRandom();
+        for (int i = 0; i < 1000; i++) {
+            byte[] key = new byte[32];
+            byte[] data = new byte[16];
+            secureRandom.nextBytes(data);
+            secureRandom.nextBytes(key);
+
+            KuznechikCipher cipher = new KuznechikCipher(key);
+            byte[] encText = new byte[16];
+            byte[] decText = new byte[16];
+            cipher.encryptBlock(data, 0, encText, 0);
+            cipher.decryptBlock(encText, 0, decText, 0);
+
+            assertArrayEquals(decText, data);
+        }
+    }
+
+    @Test
+    public void testBCBEncryption() {
+        for (int i = 0; i < 1000; i++) {
+            SecureRandom secureRandom = new SecureRandom();
+            byte[] key = new byte[32];
+            byte[] data = new byte[1024];
+            byte[] iv = new byte[16];
+            secureRandom.nextBytes(data);
+            secureRandom.nextBytes(key);
+
+            CBCCipher cbcCipher = new CBCCipher(new KuznechikCipher(key));
+            byte[] encrypted = cbcCipher.encrypt(iv, data);
+            byte[] decrypted = cbcCipher.decrypt(iv, encrypted);
+
+            assertArrayEquals(decrypted, data);
+        }
+    }
+
+    @Test
+    public void testWrapper() {
+
     }
 }

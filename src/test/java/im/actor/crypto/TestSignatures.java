@@ -1,7 +1,5 @@
 package im.actor.crypto;
 
-import im.actor.crypto.blocks.Curve25519;
-import im.actor.crypto.blocks.Curve25519KeyPair;
 import org.junit.Test;
 
 import java.security.SecureRandom;
