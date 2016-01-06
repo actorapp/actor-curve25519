@@ -1,6 +1,9 @@
 package im.actor.crypto;
 
 import im.actor.crypto.impl.ByteStrings;
+import im.actor.crypto.impl.PRF;
+import im.actor.crypto.impl.hash.*;
+import im.actor.crypto.impl.hash.SHA256;
 import org.junit.Test;
 
 import java.security.SecureRandom;
@@ -32,13 +35,17 @@ public class TestProto {
             assertArrayEquals(alicePreMaster, bobPreMaster);
 
             // Master keys
-            byte[] aliceMaster = PFR.calculate(alicePreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce));
-            byte[] bobMaster = PFR.calculate(bobPreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce));
+            byte[] aliceMaster = PRF.calculate(alicePreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 255,
+                    new SHA256());
+            byte[] bobMaster = PRF.calculate(bobPreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 255,
+                    new SHA256());
             assertArrayEquals(aliceMaster, bobMaster);
 
             // Verify data
-            byte[] aliceVerify = PFR.calculate(aliceMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce));
-            byte[] bobVerify = PFR.calculate(bobMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce));
+            byte[] aliceVerify = PRF.calculate(aliceMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 255,
+                    new SHA256());
+            byte[] bobVerify = PRF.calculate(bobMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 255,
+                    new SHA256());
             assertArrayEquals(aliceVerify, bobVerify);
 
             // Verify Signature
@@ -52,8 +59,6 @@ public class TestProto {
             byte[] server_write_mac_key = ByteStrings.substring(aliceMaster, 32, 32);
             byte[] client_write_key = ByteStrings.substring(aliceMaster, 64, 32);
             byte[] server_write_key = ByteStrings.substring(aliceMaster, 96, 32);
-            byte[] client_write_iv = ByteStrings.substring(aliceMaster, 128, 32);
-            byte[] server_write_iv = ByteStrings.substring(aliceMaster, 160, 32);
         }
     }
 
