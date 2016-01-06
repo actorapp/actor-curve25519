@@ -69,7 +69,13 @@ public class TestProto {
         SecureRandom random = new SecureRandom();
         byte[] masterKey = new byte[256];
         random.nextBytes(masterKey);
+        ActorProtoKey protoKeys = new ActorProtoKey(masterKey);
 
+        // Package (client->server)
+        byte[] rawData = "Hey! Let's encrypt!".getBytes();
 
+        // Kuznechik level
+        byte[] kuznechik = ActorProto.createKuznechikPackage(protoKeys.getClientMacKey(), rawData);
+        ActorProto.readKuznechikPackage(protoKeys.getClientMacKey(), kuznechik);
     }
 }
