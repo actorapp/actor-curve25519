@@ -5,7 +5,6 @@ import im.actor.crypto.blocks.impl.curve25519.curve_sigs;
 import im.actor.crypto.blocks.impl.curve25519.scalarmult;
 
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 public class Curve25519 {
 
@@ -68,21 +67,37 @@ public class Curve25519 {
         return agreement;
     }
 
+    /**
+     * Calculating signature
+     *
+     * @param random     random seed for signature
+     * @param privateKey private key for signature
+     * @param message    message to sign
+     * @return signature
+     */
     public synchronized byte[] calculateSignature(byte[] random, byte[] privateKey, byte[] message) {
         byte[] result = new byte[64];
 
-        if (curve_sigs.curve25519_sign(sha512, result, privateKey, message, message.length, random) != 0) {
+        if (curve_sigs.curve25519_sign(SHA512Provider, result, privateKey, message, message.length, random) != 0) {
             throw new IllegalArgumentException("Message exceeds max length!");
         }
 
         return result;
     }
 
+    /**
+     * Verification of signature
+     *
+     * @param publicKey public key of signature
+     * @param message   message
+     * @param signature signature of a message
+     * @return true if signature correct
+     */
     public synchronized boolean verifySignature(byte[] publicKey, byte[] message, byte[] signature) {
-        return curve_sigs.curve25519_verify(sha512, signature, publicKey, message, message.length) == 0;
+        return curve_sigs.curve25519_verify(SHA512Provider, signature, publicKey, message, message.length) == 0;
     }
 
-    private Sha512 sha512 = new Sha512() {
+    private final Sha512 SHA512Provider = new Sha512() {
         @Override
         public void calculateDigest(byte[] out, byte[] in, long length) {
             byte[] res = SHA512.calc(in, (int) length);
