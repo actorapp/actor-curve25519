@@ -794,7 +794,7 @@ public class Curve25519 {
 	}
 	
 	/* P = kG   and  s = sign(P)/k  */
-	private static final void core(byte[] Px, byte[] s, byte[] k, byte[] Gx) {
+	public static final void core(byte[] Px, byte[] s, byte[] k, byte[] Gx) {
 		long10 
 		    dx=new long10(),
 		    t1=new long10(),

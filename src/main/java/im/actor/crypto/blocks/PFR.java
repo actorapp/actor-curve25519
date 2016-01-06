@@ -1,7 +1,5 @@
 package im.actor.crypto.blocks;
 
-import im.actor.crypto.Tools;
-
 public class PFR {
     public static byte[] calculate(byte[] secret, String label, byte[] seed) {
         // PRF(secret: bytes, label: string, seed: bytes) = P_SHA256(secret, bytes(label) + seed);
@@ -9,7 +7,7 @@ public class PFR {
         //    where A():
         //    A(0) = seed
         //    A(i) = HMAC_hash(secret, A(i-1))
-        byte[] rSeed = Tools.merge(label.getBytes(), secret);
+        byte[] rSeed = ByteStrings.merge(label.getBytes(), secret);
         byte[] res = new byte[256];
         byte[] A = rSeed;
         for (int i = 0; i < 8; i++) {

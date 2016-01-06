@@ -17,5 +17,4 @@ public class Curve25519KeyPair {
     public byte[] getPrivateKey() {
         return privateKey;
     }
-
 }

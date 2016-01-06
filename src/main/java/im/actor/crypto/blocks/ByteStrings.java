@@ -1,6 +1,6 @@
-package im.actor.crypto;
+package im.actor.crypto.blocks;
 
-public class Tools {
+public class ByteStrings {
 
     public static byte[] substring(byte[] data, int offset, int size) {
         byte[] res = new byte[size];
