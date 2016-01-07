@@ -1,9 +1,12 @@
-package im.actor.crypto.primitives.bc;
+package im.actor.crypto.primitives.util;
 
 /**
- * @deprecated use org.bouncycastle.util.pack
+ * Source: Bouncy Castle v1.54
+ * <p/>
+ * Refactored by Steve Kite (steve@actor.im)
  */
 public abstract class Pack {
+    
     public static int bigEndianToInt(byte[] bs, int off) {
         int n = bs[off] << 24;
         n |= (bs[++off] & 0xff) << 16;

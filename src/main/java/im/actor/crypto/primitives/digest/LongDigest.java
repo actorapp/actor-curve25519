@@ -1,6 +1,6 @@
-package im.actor.crypto.primitives.bc.hash;
+package im.actor.crypto.primitives.digest;
 
-import im.actor.crypto.primitives.bc.Pack;
+import im.actor.crypto.primitives.util.Pack;
 
 /**
  * Base class for SHA-384 and SHA-512.

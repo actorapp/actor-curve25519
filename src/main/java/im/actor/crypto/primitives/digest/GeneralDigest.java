@@ -1,7 +1,7 @@
-package im.actor.crypto.primitives.bc.hash;
+package im.actor.crypto.primitives.digest;
 
 
-import im.actor.crypto.primitives.bc.Pack;
+import im.actor.crypto.primitives.util.Pack;
 
 /**
  * base implementation of MD4 family style digest as outlined in

@@ -1,6 +1,6 @@
 package im.actor.crypto;
 
-import im.actor.crypto.primitives.bc.hash.SHA256Digest;
+import im.actor.crypto.primitives.digest.SHA256Digest;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;

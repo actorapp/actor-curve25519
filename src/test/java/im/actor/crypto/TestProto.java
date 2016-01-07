@@ -1,9 +1,9 @@
 package im.actor.crypto;
 
-import im.actor.crypto.primitives.ByteStrings;
-import im.actor.crypto.primitives.PRF;
-import im.actor.crypto.primitives.bc.aes.AESFastEngine;
-import im.actor.crypto.primitives.bc.hash.SHA256;
+import im.actor.crypto.primitives.util.ByteStrings;
+import im.actor.crypto.primitives.prf.PRF;
+import im.actor.crypto.primitives.aes.AESFastEngine;
+import im.actor.crypto.primitives.digest.SHA256;
 import im.actor.crypto.primitives.kuznechik.KuznechikCipher;
 import org.junit.Test;
 

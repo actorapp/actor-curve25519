@@ -1,17 +1,26 @@
 package im.actor.crypto.primitives.hmac;
 
-import im.actor.crypto.primitives.ByteStrings;
+import im.actor.crypto.primitives.util.ByteStrings;
 import im.actor.crypto.primitives.Digest;
 
-import static im.actor.crypto.primitives.ByteStrings.merge;
-import static im.actor.crypto.primitives.ByteStrings.substring;
+import static im.actor.crypto.primitives.util.ByteStrings.merge;
+import static im.actor.crypto.primitives.util.ByteStrings.substring;
 
 public class HMAC {
-    public static void hmac(byte[] secret, byte[] message, int offset, int length, byte[] dest, int destOffset, Digest digest) {
-        byte[] fixedSecret = new byte[digest.getHashSize()];
-        if (secret.length > digest.getHashSize()) {
-            digest.hash(secret, 0, secret.length, fixedSecret, 0);
-        } else if (secret.length < digest.getHashSize()) {
+
+    private Digest digest;
+
+    public HMAC(Digest digest) {
+        this.digest = digest;
+    }
+
+    public void calculate(byte[] secret, byte[] message, int offset, int length, byte[] dest, int destOffset) {
+        byte[] fixedSecret = new byte[digest.getDigestSize()];
+        if (secret.length > digest.getDigestSize()) {
+            digest.reset();
+            digest.update(secret, 0, secret.length);
+            digest.doFinal(fixedSecret, 0);
+        } else if (secret.length < digest.getDigestSize()) {
             ByteStrings.write(fixedSecret, 0, secret, 0, secret.length);
             for (int i = secret.length; i < fixedSecret.length; i++) {
                 fixedSecret[i] = 0;
@@ -21,8 +30,8 @@ public class HMAC {
         }
 
         // Paddings
-        byte[] outerKeyPad = new byte[digest.getHashSize()];
-        byte[] innerKeyPad = new byte[digest.getHashSize()];
+        byte[] outerKeyPad = new byte[digest.getDigestSize()];
+        byte[] innerKeyPad = new byte[digest.getDigestSize()];
         for (int i = 0; i < outerKeyPad.length; i++) {
             outerKeyPad[i] = (byte) (0x5c ^ fixedSecret[i]);
             innerKeyPad[i] = (byte) (0x36 ^ fixedSecret[i]);
@@ -30,11 +39,17 @@ public class HMAC {
 
         // Inner digest
         // digest(i_key_pad ∥ message)
-        byte[] innnerHash = new byte[digest.getHashSize()];
-        digest.hash(merge(innerKeyPad, substring(message, offset, length)), 0, outerKeyPad.length, innnerHash, 0);
+        byte[] innnerHash = new byte[digest.getDigestSize()];
+        digest.reset();
+        digest.update(innerKeyPad, 0, innerKeyPad.length);
+        digest.update(message, 0, message.length);
+        digest.doFinal(innnerHash, 0);
 
         // Outer digest
         // digest(o_key_pad ∥ digest(i_key_pad ∥ message))
-        digest.hash(merge(outerKeyPad, innnerHash), 0, digest.getHashSize() * 2, dest, destOffset);
+        digest.reset();
+        digest.update(outerKeyPad, 0, outerKeyPad.length);
+        digest.update(innnerHash, 0, innnerHash.length);
+        digest.doFinal(dest, destOffset);
     }
 }

@@ -1,6 +1,6 @@
 package im.actor.crypto;
 
-import im.actor.crypto.primitives.block.CBCCipher;
+import im.actor.crypto.primitives.modes.CBCBlockCipher;
 import im.actor.crypto.primitives.kuznechik.KuznechikCipher;
 import org.junit.Test;
 
@@ -68,9 +68,9 @@ public class TestKuznechik {
             secureRandom.nextBytes(data);
             secureRandom.nextBytes(key);
 
-            CBCCipher cbcCipher = new CBCCipher(new KuznechikCipher(key));
-            byte[] encrypted = cbcCipher.encrypt(iv, data);
-            byte[] decrypted = cbcCipher.decrypt(iv, encrypted);
+            CBCBlockCipher cbcBlockCipher = new CBCBlockCipher(new KuznechikCipher(key));
+            byte[] encrypted = cbcBlockCipher.encrypt(iv, data);
+            byte[] decrypted = cbcBlockCipher.decrypt(iv, encrypted);
 
             assertArrayEquals(decrypted, data);
         }

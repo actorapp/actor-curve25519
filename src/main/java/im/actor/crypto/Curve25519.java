@@ -1,8 +1,7 @@
 package im.actor.crypto;
 
-import im.actor.crypto.primitives.bc.hash.SHA256;
-import im.actor.crypto.primitives.bc.hash.SHA512;
-import im.actor.crypto.primitives.bc.hash.SHA512Digest;
+import im.actor.crypto.primitives.digest.SHA256;
+import im.actor.crypto.primitives.digest.SHA512;
 import im.actor.crypto.primitives.curve25519.Sha512;
 import im.actor.crypto.primitives.curve25519.curve_sigs;
 import im.actor.crypto.primitives.curve25519.scalarmult;

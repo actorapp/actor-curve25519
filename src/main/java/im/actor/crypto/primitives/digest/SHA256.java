@@ -1,4 +1,4 @@
-package im.actor.crypto.primitives.bc.hash;
+package im.actor.crypto.primitives.digest;
 
 import im.actor.crypto.primitives.Digest;
 
@@ -7,7 +7,7 @@ public class SHA256 implements Digest {
     private SHA256Digest sha256Digest = new SHA256Digest();
 
     @Override
-    public int getHashSize() {
+    public int getDigestSize() {
         return sha256Digest.getDigestSize();
     }
 
