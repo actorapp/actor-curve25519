@@ -1,38 +1,20 @@
 package im.actor.crypto.primitives.bc.hash;
 
-import im.actor.crypto.primitives.Hash;
+import im.actor.crypto.primitives.Digest;
 
-import java.security.DigestException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+public class SHA256 implements Digest {
 
-public class SHA256 implements Hash {
+    private SHA256Digest sha256Digest = new SHA256Digest();
 
-    private final MessageDigest md;
-
-    public SHA256() {
-        try {
-            md = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            throw new RuntimeException("SHA-256 is not available");
-        }
+    @Override
+    public int getHashSize() {
+        return sha256Digest.getDigestSize();
     }
 
     @Override
     public void hash(byte[] src, int offset, int length, byte[] dest, int destOffset) {
-        md.reset();
-        md.update(src, offset, length);
-        try {
-            md.digest(dest, destOffset, md.getDigestLength());
-        } catch (DigestException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public int getHashSize() {
-        return md.getDigestLength();
+        sha256Digest.reset();
+        sha256Digest.update(src, offset, length);
+        sha256Digest.doFinal(dest, destOffset);
     }
 }

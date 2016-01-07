@@ -1,6 +1,6 @@
 package im.actor.crypto.primitives;
 
-public interface Hash {
+public interface Digest {
 
     int getHashSize();
 

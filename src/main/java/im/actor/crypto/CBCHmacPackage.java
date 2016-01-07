@@ -2,7 +2,7 @@ package im.actor.crypto;
 
 import im.actor.crypto.primitives.BlockCipher;
 import im.actor.crypto.primitives.ByteStrings;
-import im.actor.crypto.primitives.Hash;
+import im.actor.crypto.primitives.Digest;
 import im.actor.crypto.primitives.Padding;
 import im.actor.crypto.primitives.bc.hash.SHA256;
 import im.actor.crypto.primitives.block.CBCCipher;
@@ -23,21 +23,21 @@ public class CBCHmacPackage {
 
     private final CBCCipher cbcCipher;
     private final BlockCipher baseCipher;
-    private final Hash baseHash;
+    private final Digest baseDigest;
     private final byte[] hmacKey;
     private final Padding padding;
 
-    public CBCHmacPackage(BlockCipher baseCipher, Hash baseHash, byte[] hmacKey) {
+    public CBCHmacPackage(BlockCipher baseCipher, Digest baseDigest, byte[] hmacKey) {
         this.cbcCipher = new CBCCipher(baseCipher);
         this.baseCipher = baseCipher;
-        this.baseHash = baseHash;
+        this.baseDigest = baseDigest;
         this.hmacKey = hmacKey;
         this.padding = new TLSPadding();
     }
 
     public byte[] encryptPackage(byte[] iv, byte[] content) {
         int paddingLength = 0;
-        int length =/*Hash size*/ 32 + /*Length prefix*/ 4 + content.length + /*padding length prefix*/1;
+        int length =/*Digest size*/ 32 + /*Length prefix*/ 4 + content.length + /*padding length prefix*/1;
         if (length % 32 != 0) {
             paddingLength = 32 - length % 32;
             length += paddingLength;

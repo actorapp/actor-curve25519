@@ -36,16 +36,16 @@ public class TestProto {
             assertArrayEquals(alicePreMaster, bobPreMaster);
 
             // Master keys
-            byte[] aliceMaster = PRF.calculate(alicePreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 255,
+            byte[] aliceMaster = PRF.calculate(alicePreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 256,
                     new SHA256());
-            byte[] bobMaster = PRF.calculate(bobPreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 255,
+            byte[] bobMaster = PRF.calculate(bobPreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 256,
                     new SHA256());
             assertArrayEquals(aliceMaster, bobMaster);
 
             // Verify data
-            byte[] aliceVerify = PRF.calculate(aliceMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 255,
+            byte[] aliceVerify = PRF.calculate(aliceMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 256,
                     new SHA256());
-            byte[] bobVerify = PRF.calculate(bobMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 255,
+            byte[] bobVerify = PRF.calculate(bobMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 256,
                     new SHA256());
             assertArrayEquals(aliceVerify, bobVerify);
 
@@ -102,7 +102,7 @@ public class TestProto {
 
         // Package (client->server)
         byte[] rawData = "Hey! Let's encrypt!".getBytes();
-        
+
         CBCHmacPackage cbcHmacPackage = new CBCHmacPackage(new AESFastEngine(protoKeys.getClientKey()),
                 new SHA256(), protoKeys.getClientMacKey());
 
