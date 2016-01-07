@@ -50,7 +50,7 @@ public class CBCHmacPackage {
         ByteStrings.write(res, 4, content, 0, content.length);
 
         hmac.calculate(hmacKey, res, 0, content.length + 4, res, content.length + 4);
-        padding.padding(res, res.length - paddingLength, paddingLength);
+        padding.padding(res, res.length - paddingLength - 1, paddingLength + 1);
 
         return cbcBlockCipher.encrypt(iv, res);
     }
@@ -60,7 +60,7 @@ public class CBCHmacPackage {
 
         byte[] hmacValue = new byte[32];
         int length = ByteStrings.bytesToInt(content);
-        hmac.calculate(hmacKey, content, 4, length, hmacValue, 0);
+        hmac.calculate(hmacKey, content, 0, length + 4, hmacValue, 0);
         for (int i = 0; i < 32; i++) {
             if (hmacValue[i] != content[length + 4 + i]) {
                 throw new RuntimeException("Broken package!");
@@ -68,7 +68,7 @@ public class CBCHmacPackage {
         }
 
         int paddingSize = content[content.length - 1] & 0xFF;
-        if (!padding.validate(content, content.length - 1 - paddingSize, paddingSize)) {
+        if (!padding.validate(content, content.length - paddingSize, paddingSize)) {
             throw new RuntimeException("Broken package!");
         }
 

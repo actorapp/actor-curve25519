@@ -36,17 +36,13 @@ public class TestProto {
             assertArrayEquals(alicePreMaster, bobPreMaster);
 
             // Master keys
-            byte[] aliceMaster = PRF.calculate(alicePreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 256,
-                    new SHA256());
-            byte[] bobMaster = PRF.calculate(bobPreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 256,
-                    new SHA256());
+            byte[] aliceMaster = new PRF(new SHA256(), "master secret", 256).calculate(alicePreMaster, ByteStrings.merge(aliceNonce, bobNonce));
+            byte[] bobMaster = new PRF(new SHA256(), "master secret", 256).calculate(bobPreMaster, ByteStrings.merge(aliceNonce, bobNonce));
             assertArrayEquals(aliceMaster, bobMaster);
 
             // Verify data
-            byte[] aliceVerify = PRF.calculate(aliceMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 256,
-                    new SHA256());
-            byte[] bobVerify = PRF.calculate(bobMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 256,
-                    new SHA256());
+            byte[] aliceVerify = new PRF(new SHA256(), "client finished", 256).calculate(aliceMaster, ByteStrings.merge(aliceNonce, bobNonce));
+            byte[] bobVerify = new PRF(new SHA256(), "client finished", 256).calculate(bobMaster, ByteStrings.merge(aliceNonce, bobNonce));
             assertArrayEquals(aliceVerify, bobVerify);
 
             // Verify Signature
