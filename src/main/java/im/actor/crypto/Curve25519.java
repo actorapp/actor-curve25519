@@ -1,8 +1,8 @@
 package im.actor.crypto;
 
-import im.actor.crypto.impl.curve25519.Sha512;
-import im.actor.crypto.impl.curve25519.curve_sigs;
-import im.actor.crypto.impl.curve25519.scalarmult;
+import im.actor.crypto.primitives.curve25519.Sha512;
+import im.actor.crypto.primitives.curve25519.curve_sigs;
+import im.actor.crypto.primitives.curve25519.scalarmult;
 
 import java.security.SecureRandom;
 

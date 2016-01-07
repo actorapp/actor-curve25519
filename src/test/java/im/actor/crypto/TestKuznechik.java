@@ -1,7 +1,7 @@
 package im.actor.crypto;
 
-import im.actor.crypto.impl.block.CBCCipher;
-import im.actor.crypto.impl.kuznechik.KuznechikCipher;
+import im.actor.crypto.primitives.block.CBCCipher;
+import im.actor.crypto.primitives.kuznechik.KuznechikCipher;
 import org.junit.Test;
 
 import java.security.SecureRandom;
