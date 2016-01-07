@@ -35,7 +35,9 @@ public class Curve25519 {
         byte[] randomBytes = new byte[32];
         random.nextBytes(randomBytes);
         byte[] privateKey = new byte[32];
-        new SHA256().hash(randomBytes, 0, 32, privateKey, 0);
+        SHA256 sha256 = new SHA256();
+        sha256.update(randomBytes, 0, 32);
+        sha256.doFinal(privateKey, 0);
 
         // Performing bit's flipping
         privateKey[0] &= 248;
@@ -103,7 +105,9 @@ public class Curve25519 {
     private final Sha512 SHA512Provider = new Sha512() {
         @Override
         public void calculateDigest(byte[] out, byte[] in, long length) {
-            new SHA512().hash(in, 0, (int) length, out, 0);
+            SHA512 sha512 = new SHA512();
+            sha512.update(in, 0, (int) length);
+            sha512.doFinal(out, 0);
         }
     };
 }
