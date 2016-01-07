@@ -1,9 +1,12 @@
 package im.actor.crypto;
 
 import im.actor.crypto.impl.ByteStrings;
+import im.actor.crypto.impl.CBCHmacPackage;
 import im.actor.crypto.impl.PRF;
-import im.actor.crypto.impl.hash.*;
-import im.actor.crypto.impl.hash.SHA256;
+import im.actor.crypto.impl.bc.hash.*;
+import im.actor.crypto.impl.bc.hash.SHA256;
+import im.actor.crypto.impl.bc.hash.SHA512;
+import im.actor.crypto.impl.kuznechik.KuznechikCipher;
 import org.junit.Test;
 
 import java.security.SecureRandom;
@@ -69,13 +72,23 @@ public class TestProto {
         SecureRandom random = new SecureRandom();
         byte[] masterKey = new byte[256];
         random.nextBytes(masterKey);
+        byte[] iv = new byte[16];
+        random.nextBytes(iv);
+
         ActorProtoKey protoKeys = new ActorProtoKey(masterKey);
 
         // Package (client->server)
         byte[] rawData = "Hey! Let's encrypt!".getBytes();
 
         // Kuznechik level
-        byte[] kuznechik = ActorProto.createKuznechikPackage(protoKeys.getClientMacKey(), rawData);
-        ActorProto.readKuznechikPackage(protoKeys.getClientMacKey(), kuznechik);
+        CBCHmacPackage cbcHmacPackage = new CBCHmacPackage(new KuznechikCipher(protoKeys.getClientKey()),
+                new SHA256(), protoKeys.getClientMacKey());
+
+        byte[] encrypted = cbcHmacPackage.encryptPackage(iv, rawData);
+        byte[] data = cbcHmacPackage.decryptPackage(iv, encrypted);
+
+        assertArrayEquals(data, rawData);
+//        byte[] kuznechik = ActorProto.createKuznechikPackage(protoKeys.getClientMacKey(), rawData);
+//        ActorProto.readKuznechikPackage(protoKeys.getClientMacKey(), kuznechik);
     }
 }

@@ -1,4 +1,4 @@
-package im.actor.crypto.impl.aes;
+package im.actor.crypto.impl.bc;
 
 /**
  * @deprecated use org.bouncycastle.util.pack

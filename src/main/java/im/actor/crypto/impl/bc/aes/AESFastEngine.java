@@ -1,6 +1,7 @@
-package im.actor.crypto.impl.aes;
+package im.actor.crypto.impl.bc.aes;
 
 import im.actor.crypto.impl.BlockCipher;
+import im.actor.crypto.impl.bc.Pack;
 
 /**
  * an implementation of the AES (Rijndael), from FIPS-197.

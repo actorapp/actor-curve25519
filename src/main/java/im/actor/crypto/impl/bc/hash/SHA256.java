@@ -1,4 +1,4 @@
-package im.actor.crypto.impl.hash;
+package im.actor.crypto.impl.bc.hash;
 
 import im.actor.crypto.impl.Hash;
 
