@@ -50,7 +50,7 @@ public class CBCHmacPackage {
     }
 
     public byte[] decryptPackage(byte[] iv, byte[] encryptedContent) {
-        byte[] content = cbcCipher.decrypt(iv,encryptedContent);
+        byte[] content = cbcCipher.decrypt(iv, encryptedContent);
 
         byte[] hmac = new byte[32];
         int length = ByteStrings.bytesToInt(content);
@@ -60,7 +60,15 @@ public class CBCHmacPackage {
                 throw new RuntimeException("Broken package!");
             }
         }
-        // TODO: Padding check
+
+        // TODO: Validate
+        int padding = content[content.length - 1] & 0xFF;
+        for (int i = 0; i < padding; i++) {
+            if ((content[content.length - 1 - i] & 0xFF) != padding) {
+                throw new RuntimeException("Broken package!");
+            }
+        }
+
         return ByteStrings.substring(content, 4, length);
     }
 }
