@@ -42,25 +42,16 @@ public class TestProto {
             assertArrayEquals(alicePreMaster, bobPreMaster);
 
             // Master keys
-            PRF prfSHA256 = Cryptos.PRF_SHA256();
-            PRF prfSTREEBOG256 = Cryptos.PRF_STREEBOG256();
-            byte[] aliceMaster = merge(
-                    prfSHA256.calculate(alicePreMaster, "master secret", merge(aliceNonce, bobNonce), 128),
-                    prfSTREEBOG256.calculate(alicePreMaster, "nsa secret", merge(aliceNonce, bobNonce), 128));
-            byte[] bobMaster = merge(
-                    prfSHA256.calculate(bobPreMaster, "master secret", merge(aliceNonce, bobNonce), 128),
-                    prfSTREEBOG256.calculate(bobPreMaster, "nsa secret", merge(aliceNonce, bobNonce), 128));
+            PRF prfCombined = Cryptos.PRF_SHA_STREEBOG_256();
+            byte[] aliceMaster = prfCombined.calculate(alicePreMaster, "master secret", merge(aliceNonce, bobNonce), 256);
+            byte[] bobMaster = prfCombined.calculate(bobPreMaster, "master secret", merge(aliceNonce, bobNonce), 256);
             assertEquals(aliceMaster.length, 256);
             assertEquals(bobMaster.length, 256);
             assertArrayEquals(aliceMaster, bobMaster);
 
             // Verify data
-            byte[] aliceVerify = merge(
-                    prfSHA256.calculate(aliceMaster, "client finished", merge(aliceNonce, bobNonce), 128),
-                    prfSTREEBOG256.calculate(aliceMaster, "patron finished", merge(aliceNonce, bobNonce), 128));
-            byte[] bobVerify = merge(
-                    prfSHA256.calculate(bobMaster, "client finished", merge(aliceNonce, bobNonce), 128),
-                    prfSTREEBOG256.calculate(bobMaster, "patron finished", merge(aliceNonce, bobNonce), 128));
+            byte[] aliceVerify = prfCombined.calculate(aliceMaster, "client finished", merge(aliceNonce, bobNonce), 256);
+            byte[] bobVerify = prfCombined.calculate(bobMaster, "client finished", merge(aliceNonce, bobNonce), 256);
             assertArrayEquals(aliceVerify, bobVerify);
 
             // Verify Signature
