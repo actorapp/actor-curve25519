@@ -3,9 +3,9 @@ package im.actor.crypto.primitives.streebog;
 public class StreebogDigest {
 
     private final int hashLength;
-    private Streebog512 h = new Streebog512();
-    private Streebog512 m = new Streebog512();
-    private Streebog512 e = new Streebog512();
+    private Int512 h = new Int512();
+    private Int512 m = new Int512();
+    private Int512 e = new Int512();
     private int pt;
     private long n;
 

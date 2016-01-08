@@ -1,5 +1,6 @@
 package im.actor.crypto;
 
+import im.actor.crypto.primitives.streebog.Streebog256;
 import im.actor.crypto.primitives.util.ByteStrings;
 import im.actor.crypto.primitives.prf.PRF;
 import im.actor.crypto.primitives.aes.AESFastEngine;
@@ -76,7 +77,7 @@ public class TestProto {
 
         // Kuznechik level
         CBCHmacPackage cbcHmacPackage = new CBCHmacPackage(new KuznechikCipher(protoKeys.getClientKey()),
-                new SHA256(), protoKeys.getClientMacKey());
+                new Streebog256(), protoKeys.getClientMacKey());
 
         byte[] encrypted = cbcHmacPackage.encryptPackage(iv, rawData);
         byte[] data = cbcHmacPackage.decryptPackage(iv, encrypted);

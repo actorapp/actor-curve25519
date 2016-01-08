@@ -14,7 +14,7 @@ class StreebogMath {
 //    sbob_sl64[4][t.b[i + 32]] ^ sbob_sl64[5][t.b[i + 40]] ^ \
 //    sbob_sl64[6][t.b[i + 48]] ^ sbob_sl64[7][t.b[i + 56]])
 
-    private static long SBOG_LPSti64(Streebog512 t, int i) {
+    private static long SBOG_LPSti64(Int512 t, int i) {
         return (StreebogTables.sbob_sl64[0][t.getByte(i) & 0xFF] ^
                 StreebogTables.sbob_sl64[1][t.getByte(i + 8) & 0xFF] ^
                 StreebogTables.sbob_sl64[2][t.getByte(i + 16) & 0xFF] ^
@@ -25,13 +25,13 @@ class StreebogMath {
                 StreebogTables.sbob_sl64[7][t.getByte(i + 56) & 0xFF]);
     }
 
-    public static void streebog_g(Streebog512 h, Streebog512 m, long n) {
+    public static void streebog_g(Int512 h, Int512 m, long n) {
         // w512_t k, s, t;
         // k = LPS(h ^ n)
         // memcpy(&t, h, 64);
-        Streebog512 t = new Streebog512(h.getBytes());
-        Streebog512 k = new Streebog512();
-        Streebog512 s = new Streebog512();
+        Int512 t = new Int512(h.getBytes());
+        Int512 k = new Int512();
+        Int512 s = new Int512();
 
         // for (i = 63; n > 0; i--) {
         for (int i = 63; n > 0; i--) {

@@ -2,9 +2,9 @@ package im.actor.crypto.primitives.streebog;
 
 import im.actor.crypto.primitives.Digest;
 
-public class Streebog512 implements Digest {
+public class Streebog256 implements Digest {
 
-    private static final int DIGEST_SIZE = 64;
+    private static final int DIGEST_SIZE = 32;
 
     private StreebogDigest streebogDigest = new StreebogDigest(DIGEST_SIZE);
 
