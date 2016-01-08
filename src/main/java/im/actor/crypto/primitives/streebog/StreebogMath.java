@@ -34,7 +34,7 @@ class StreebogMath {
         Streebog512 s = new Streebog512();
 
         // for (i = 63; n > 0; i--) {
-        for (int i = 63; n != 0; i--) {
+        for (int i = 63; n > 0; i--) {
             // t.b[i] ^= n & 0xFF;
             t.setByte(i, (byte) (t.getByte(i) ^ ((byte) (n & 0xFF))));
             // n >>= 8;

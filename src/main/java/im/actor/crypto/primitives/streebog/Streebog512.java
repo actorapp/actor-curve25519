@@ -10,7 +10,7 @@ public class Streebog512 {
     private byte[] value;
 
     public Streebog512(byte[] value) {
-        this.value = value;
+        setBytes(value);
     }
 
     public Streebog512() {
@@ -22,7 +22,10 @@ public class Streebog512 {
     }
 
     public void setBytes(byte[] value) {
-        this.value = value;
+        this.value = new byte[64];
+        for (int i = 0; i < 64; i++) {
+            this.value[i] = value[i];
+        }
     }
 
     public byte getByte(int index) {
