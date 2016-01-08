@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import java.security.SecureRandom;
 
+import static im.actor.crypto.primitives.util.ByteStrings.merge;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -41,16 +42,25 @@ public class TestProto {
             assertArrayEquals(alicePreMaster, bobPreMaster);
 
             // Master keys
-            PRF prf = Cryptos.PRF_SHA256();
-            byte[] aliceMaster = prf.calculate(alicePreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 256);
-            byte[] bobMaster = prf.calculate(bobPreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 256);
+            PRF prfSHA256 = Cryptos.PRF_SHA256();
+            PRF prfSTREEBOG256 = Cryptos.PRF_STREEBOG256();
+            byte[] aliceMaster = merge(
+                    prfSHA256.calculate(alicePreMaster, "master secret", merge(aliceNonce, bobNonce), 128),
+                    prfSTREEBOG256.calculate(alicePreMaster, "nsa secret", merge(aliceNonce, bobNonce), 128));
+            byte[] bobMaster = merge(
+                    prfSHA256.calculate(bobPreMaster, "master secret", merge(aliceNonce, bobNonce), 128),
+                    prfSTREEBOG256.calculate(bobPreMaster, "nsa secret", merge(aliceNonce, bobNonce), 128));
             assertEquals(aliceMaster.length, 256);
             assertEquals(bobMaster.length, 256);
             assertArrayEquals(aliceMaster, bobMaster);
 
             // Verify data
-            byte[] aliceVerify = prf.calculate(aliceMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 256);
-            byte[] bobVerify = prf.calculate(bobMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 256);
+            byte[] aliceVerify = merge(
+                    prfSHA256.calculate(aliceMaster, "client finished", merge(aliceNonce, bobNonce), 128),
+                    prfSTREEBOG256.calculate(aliceMaster, "patron finished", merge(aliceNonce, bobNonce), 128));
+            byte[] bobVerify = merge(
+                    prfSHA256.calculate(bobMaster, "client finished", merge(aliceNonce, bobNonce), 128),
+                    prfSTREEBOG256.calculate(bobMaster, "patron finished", merge(aliceNonce, bobNonce), 128));
             assertArrayEquals(aliceVerify, bobVerify);
 
             // Verify Signature
