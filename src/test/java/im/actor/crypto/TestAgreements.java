@@ -2,19 +2,25 @@ package im.actor.crypto;
 
 import org.junit.Test;
 
+import java.security.SecureRandom;
+
 import static org.junit.Assert.assertArrayEquals;
 
 public class TestAgreements {
 
+    private SecureRandom secureRandom = new SecureRandom();
+
     @Test
     public void testRandomAgreements() {
-        Curve25519 curve25519 = new Curve25519();
         for (int i = 0; i < 1000; i++) {
-            Curve25519KeyPair aliceKey = curve25519.keyGen();
-            Curve25519KeyPair bobKey = curve25519.keyGen();
+            byte[] randomBytes = new byte[32];
+            secureRandom.nextBytes(randomBytes);
+            Curve25519KeyPair aliceKey = Curve25519.keyGen(randomBytes);
+            secureRandom.nextBytes(randomBytes);
+            Curve25519KeyPair bobKey = Curve25519.keyGen(randomBytes);
 
-            byte[] aliceShared = curve25519.calculateAgreement(aliceKey.getPrivateKey(), bobKey.getPublicKey());
-            byte[] bobShared = curve25519.calculateAgreement(bobKey.getPrivateKey(), aliceKey.getPublicKey());
+            byte[] aliceShared = Curve25519.calculateAgreement(aliceKey.getPrivateKey(), bobKey.getPublicKey());
+            byte[] bobShared = Curve25519.calculateAgreement(bobKey.getPrivateKey(), aliceKey.getPublicKey());
 
             assertArrayEquals(aliceShared, bobShared);
         }

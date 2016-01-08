@@ -59,7 +59,7 @@ public class TestKuznechik {
     }
 
     @Test
-    public void testBCBEncryption() {
+    public void testBCBEncryption() throws IntegrityException {
         for (int i = 0; i < 1000; i++) {
             SecureRandom secureRandom = new SecureRandom();
             byte[] key = new byte[32];

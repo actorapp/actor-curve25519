@@ -4,6 +4,8 @@ import im.actor.crypto.primitives.streebog.StreebogDigest;
 import im.actor.crypto.tools.Hex;
 import org.junit.Test;
 
+import java.security.SecureRandom;
+
 import static org.junit.Assert.assertArrayEquals;
 
 public class TestStreebog {
@@ -41,7 +43,7 @@ public class TestStreebog {
     }
 
     @Test
-    public void testStreebog64(){
+    public void testStreebog64() {
         for (int i = 0; i < digests64.length; i++) {
             byte[] res = Hex.fromHexReverse(digests64[i]);
             byte[] data = messages[i].getBytes();

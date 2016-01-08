@@ -1,5 +1,6 @@
 package im.actor.crypto;
 
+import im.actor.crypto.primitives.hmac.HMAC;
 import im.actor.crypto.primitives.streebog.Streebog256;
 import im.actor.crypto.primitives.util.ByteStrings;
 import im.actor.crypto.primitives.prf.PRF;
@@ -11,57 +12,57 @@ import org.junit.Test;
 import java.security.SecureRandom;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestProto {
     @Test
     public void testProtoDH() {
-        Curve25519 curve25519 = new Curve25519();
         SecureRandom random = new SecureRandom();
         for (int i = 0; i < 1000; i++) {
 
             // Initial Data
 
             // Alice as a 'Server'
-            Curve25519KeyPair aliceKey = curve25519.keyGen();
+            byte[] randomBytes = new byte[32];
+            random.nextBytes(randomBytes);
+            Curve25519KeyPair aliceKey = Curve25519.keyGen(randomBytes);
             byte[] aliceNonce = new byte[32];
             random.nextBytes(aliceNonce);
             // Bob as a 'Server'
-            Curve25519KeyPair bobKey = curve25519.keyGen();
+            random.nextBytes(randomBytes);
+            Curve25519KeyPair bobKey = Curve25519.keyGen(randomBytes);
             byte[] bobNonce = new byte[32];
             random.nextBytes(bobNonce);
 
             // PreMasters
-            byte[] alicePreMaster = curve25519.calculateAgreement(aliceKey.getPrivateKey(), bobKey.getPublicKey());
-            byte[] bobPreMaster = curve25519.calculateAgreement(bobKey.getPrivateKey(), aliceKey.getPublicKey());
+            byte[] alicePreMaster = Curve25519.calculateAgreement(aliceKey.getPrivateKey(), bobKey.getPublicKey());
+            byte[] bobPreMaster = Curve25519.calculateAgreement(bobKey.getPrivateKey(), aliceKey.getPublicKey());
             assertArrayEquals(alicePreMaster, bobPreMaster);
 
             // Master keys
-            byte[] aliceMaster = new PRF(new SHA256(), "master secret", 256).calculate(alicePreMaster, ByteStrings.merge(aliceNonce, bobNonce));
-            byte[] bobMaster = new PRF(new SHA256(), "master secret", 256).calculate(bobPreMaster, ByteStrings.merge(aliceNonce, bobNonce));
+            PRF prf = Cryptos.PRF_SHA256();
+            byte[] aliceMaster = prf.calculate(alicePreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 256);
+            byte[] bobMaster = prf.calculate(bobPreMaster, "master secret", ByteStrings.merge(aliceNonce, bobNonce), 256);
+            assertEquals(aliceMaster.length, 256);
+            assertEquals(bobMaster.length, 256);
             assertArrayEquals(aliceMaster, bobMaster);
 
             // Verify data
-            byte[] aliceVerify = new PRF(new SHA256(), "client finished", 256).calculate(aliceMaster, ByteStrings.merge(aliceNonce, bobNonce));
-            byte[] bobVerify = new PRF(new SHA256(), "client finished", 256).calculate(bobMaster, ByteStrings.merge(aliceNonce, bobNonce));
+            byte[] aliceVerify = prf.calculate(aliceMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 256);
+            byte[] bobVerify = prf.calculate(bobMaster, "client finished", ByteStrings.merge(aliceNonce, bobNonce), 256);
             assertArrayEquals(aliceVerify, bobVerify);
 
             // Verify Signature
-            byte[] randomBytes = new byte[64];
-            random.nextBytes(randomBytes);
-            byte[] verifySig = curve25519.calculateSignature(randomBytes, bobKey.getPrivateKey(), bobVerify);
-            assertTrue(curve25519.verifySignature(bobKey.getPublicKey(), aliceVerify, verifySig));
-
-            // Building Parameters
-            byte[] client_write_mac_key = ByteStrings.substring(aliceMaster, 0, 32);
-            byte[] server_write_mac_key = ByteStrings.substring(aliceMaster, 32, 32);
-            byte[] client_write_key = ByteStrings.substring(aliceMaster, 64, 32);
-            byte[] server_write_key = ByteStrings.substring(aliceMaster, 96, 32);
+            byte[] randomBytes2 = new byte[64];
+            random.nextBytes(randomBytes2);
+            byte[] verifySig = Curve25519.calculateSignature(randomBytes2, bobKey.getPrivateKey(), bobVerify);
+            assertTrue(Curve25519.verifySignature(bobKey.getPublicKey(), aliceVerify, verifySig));
         }
     }
 
     @Test
-    public void testKuznechikProtoEncryption() {
+    public void testKuznechikProtoEncryption() throws IntegrityException {
 
         // Master key of a connection
         SecureRandom random = new SecureRandom();
@@ -76,17 +77,17 @@ public class TestProto {
         byte[] rawData = "Hey! Let's encrypt!".getBytes();
 
         // Kuznechik level
-        CBCHmacPackage cbcHmacPackage = new CBCHmacPackage(new KuznechikCipher(protoKeys.getClientKey()),
-                new Streebog256(), protoKeys.getClientMacKey());
+        CBCHmacPackage cbcHmacPackage = new CBCHmacPackage(new KuznechikCipher(protoKeys.getClientRussianKey()),
+                new Streebog256(), protoKeys.getClientMacRussianKey());
 
-        byte[] encrypted = cbcHmacPackage.encryptPackage(iv, rawData);
-        byte[] data = cbcHmacPackage.decryptPackage(iv, encrypted);
+        byte[] encrypted = cbcHmacPackage.encryptPackage(0, iv, rawData);
+        byte[] data = cbcHmacPackage.decryptPackage(0, iv, encrypted);
 
         assertArrayEquals(data, rawData);
     }
 
     @Test
-    public void testAESProtoEncryption() {
+    public void testAESProtoEncryption() throws IntegrityException {
 
         // Master key of a connection
         SecureRandom random = new SecureRandom();
@@ -103,8 +104,8 @@ public class TestProto {
         CBCHmacPackage cbcHmacPackage = new CBCHmacPackage(new AESFastEngine(protoKeys.getClientKey()),
                 new SHA256(), protoKeys.getClientMacKey());
 
-        byte[] encrypted = cbcHmacPackage.encryptPackage(iv, rawData);
-        byte[] data = cbcHmacPackage.decryptPackage(iv, encrypted);
+        byte[] encrypted = cbcHmacPackage.encryptPackage(1, iv, rawData);
+        byte[] data = cbcHmacPackage.decryptPackage(1, iv, encrypted);
 
         assertArrayEquals(data, rawData);
     }
