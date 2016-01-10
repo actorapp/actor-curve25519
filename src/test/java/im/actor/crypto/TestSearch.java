@@ -2,6 +2,8 @@ package im.actor.crypto;
 
 import im.actor.crypto.primitives.digest.SHA256;
 import im.actor.crypto.primitives.hmac.HMAC;
+import im.actor.crypto.search.SearchableHashedWord;
+import im.actor.crypto.search.SearchableWordDigest;
 import org.junit.Test;
 
 import java.security.SecureRandom;
@@ -16,8 +18,11 @@ public class TestSearch {
         // Key For encryption
         SecureRandom secureRandom = new SecureRandom();
         byte[] secret = new byte[32];
-        byte[] keySecret = new byte[16];
+        byte[] keySecret = new byte[32];
         secureRandom.nextBytes(secret);
+        secureRandom.nextBytes(keySecret);
+
+        SearchableWordDigest searchableWordDigest = SearchableWordDigest.DEFAULT();
 
         String text = "car cat money open open open open twitter honey";
         String query = "open";
@@ -33,20 +38,24 @@ public class TestSearch {
         // Indexing
         List<byte[]> indexedWords = new ArrayList<byte[]>();
         for (byte[] b : encWords) {
+
+            SearchableHashedWord word = new SearchableHashedWord(b, wordKey(keySecret, b));
+
             byte[] r = new byte[20];
             secureRandom.nextBytes(r);
-            byte[] storedWord = indexWord(keySecret, b, r);
-            indexedWords.add(indexWord(keySecret, b, r));
-            if (!compare(wordKey(keySecret, b), b, storedWord)) {
+            byte[] storedWord = searchableWordDigest.digest(word, r);
+            indexedWords.add(storedWord);
+
+            if (!searchableWordDigest.compare(storedWord, word)) {
                 throw new RuntimeException();
             }
         }
 
         // Searching
-        byte[] workKey = wordKey(keySecret, encQuery);
+        SearchableHashedWord queryWord = new SearchableHashedWord(encQuery, wordKey(keySecret, encQuery));
         boolean isFound = false;
         for (int i = 0; i < indexedWords.size(); i++) {
-            if (compare(workKey, encQuery, indexedWords.get(i))) {
+            if (searchableWordDigest.compare(indexedWords.get(i), queryWord)) {
                 if (i < 3 || i > 6) {
                     throw new RuntimeException();
                 }
@@ -88,40 +97,5 @@ public class TestSearch {
         byte[] key = new byte[32];
         hmac.doFinal(key, 0);
         return key;
-    }
-
-    private boolean compare(byte[] wordKey, byte[] cipherWord, byte[] storedWord) {
-        HMAC hmac = new HMAC(wordKey, new SHA256());
-        byte[] tmp = new byte[32];
-        for (int i = 0; i < 32; i++) {
-            tmp[i] = (byte) (cipherWord[i] ^ storedWord[i]);
-        }
-        hmac.update(tmp, 0, 20);
-        byte[] dest = new byte[32];
-        hmac.doFinal(dest, 0);
-        for (int i = 0; i < 12; i++) {
-            if (dest[i] != tmp[i + 20]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private byte[] indexWord(byte[] keySecret, byte[] cipherWord, byte[] random) {
-        byte[] res = new byte[32];
-        for (int i = 0; i < 20; i++) {
-            res[i] = random[i];
-        }
-        HMAC hmac = new HMAC(wordKey(keySecret, cipherWord), new SHA256());
-        hmac.update(res, 0, 20);
-        byte[] dest = new byte[32];
-        hmac.doFinal(dest, 0);
-        for (int i = 0; i < 12; i++) {
-            res[i + 20] = dest[i];
-        }
-        for (int i = 0; i < 32; i++) {
-            res[i] = (byte) (res[i] ^ cipherWord[i]);
-        }
-        return res;
     }
 }
