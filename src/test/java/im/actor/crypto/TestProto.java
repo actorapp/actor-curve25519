@@ -1,6 +1,6 @@
 package im.actor.crypto;
 
-import im.actor.crypto.primitives.hmac.HMAC;
+import im.actor.crypto.container.CBCHmacContainer;
 import im.actor.crypto.primitives.streebog.Streebog256;
 import im.actor.crypto.primitives.util.ByteStrings;
 import im.actor.crypto.primitives.prf.PRF;
@@ -78,11 +78,11 @@ public class TestProto {
         byte[] rawData = "Hey! Let's encrypt!".getBytes();
 
         // Kuznechik level
-        CBCHmacPackage cbcHmacPackage = new CBCHmacPackage(new KuznechikCipher(protoKeys.getClientRussianKey()),
+        CBCHmacContainer cbcHmacContainer = new CBCHmacContainer(new KuznechikCipher(protoKeys.getClientRussianKey()),
                 new Streebog256(), protoKeys.getClientMacRussianKey());
 
-        byte[] encrypted = cbcHmacPackage.encryptPackage(0, iv, rawData);
-        byte[] data = cbcHmacPackage.decryptPackage(0, iv, encrypted);
+        byte[] encrypted = cbcHmacContainer.encryptPackage(ByteStrings.longToBytes(0), iv, rawData);
+        byte[] data = cbcHmacContainer.decryptPackage(ByteStrings.longToBytes(0), iv, encrypted);
 
         assertArrayEquals(data, rawData);
     }
@@ -102,11 +102,11 @@ public class TestProto {
         // Package (client->server)
         byte[] rawData = "Hey! Let's encrypt!".getBytes();
 
-        CBCHmacPackage cbcHmacPackage = new CBCHmacPackage(new AESFastEngine(protoKeys.getClientKey()),
+        CBCHmacContainer cbcHmacContainer = new CBCHmacContainer(new AESFastEngine(protoKeys.getClientKey()),
                 new SHA256(), protoKeys.getClientMacKey());
 
-        byte[] encrypted = cbcHmacPackage.encryptPackage(1, iv, rawData);
-        byte[] data = cbcHmacPackage.decryptPackage(1, iv, encrypted);
+        byte[] encrypted = cbcHmacContainer.encryptPackage(ByteStrings.longToBytes(1), iv, rawData);
+        byte[] data = cbcHmacContainer.decryptPackage(ByteStrings.longToBytes(1), iv, encrypted);
 
         assertArrayEquals(data, rawData);
     }

@@ -1,13 +1,13 @@
-package im.actor.crypto;
+package im.actor.crypto.container;
 
+import im.actor.crypto.IntegrityException;
 import im.actor.crypto.primitives.BlockCipher;
 import im.actor.crypto.primitives.util.ByteStrings;
 import im.actor.crypto.primitives.Digest;
 import im.actor.crypto.primitives.Padding;
-import im.actor.crypto.primitives.digest.SHA256;
 import im.actor.crypto.primitives.modes.CBCBlockCipher;
 import im.actor.crypto.primitives.hmac.HMAC;
-import im.actor.crypto.primitives.padding.TLSPadding;
+import im.actor.crypto.primitives.padding.PKCS7Padding;
 
 /**
  * CBC-encrypted package with HMAC (MAC-THEN-ENCRYPT).
@@ -18,8 +18,10 @@ import im.actor.crypto.primitives.padding.TLSPadding;
  * 4) HMAC[HMAC.lenght]
  * 5) TLS-like padding
  * Then this package is encrypted with baseCipher in CBC mode
+ *
+ * @author Steve Kite (steve@actor.im)
  */
-public class CBCHmacPackage {
+public class CBCHmacContainer {
 
     private final CBCBlockCipher cbcBlockCipher;
     private final BlockCipher baseCipher;
@@ -28,16 +30,16 @@ public class CBCHmacPackage {
     private final byte[] hmacKey;
     private final Padding padding;
 
-    public CBCHmacPackage(BlockCipher baseCipher, Digest baseDigest, byte[] hmacKey) {
+    public CBCHmacContainer(BlockCipher baseCipher, Digest baseDigest, byte[] hmacKey) {
         this.cbcBlockCipher = new CBCBlockCipher(baseCipher);
         this.baseCipher = baseCipher;
         this.baseDigest = baseDigest;
         this.hmacKey = hmacKey;
-        this.padding = new TLSPadding();
+        this.padding = new PKCS7Padding();
         this.hmac = new HMAC(hmacKey, baseDigest);
     }
 
-    public byte[] encryptPackage(long seqNo, byte[] iv, byte[] content) throws IntegrityException {
+    public byte[] encryptPackage(byte[] header, byte[] iv, byte[] content) throws IntegrityException {
         if (iv.length != 16) {
             throw new IntegrityException("IV MUST be 16 bytes long!");
         }
@@ -53,7 +55,7 @@ public class CBCHmacPackage {
         ByteStrings.write(res, 4, content, 0, content.length);
 
         hmac.reset();
-        hmac.update(ByteStrings.longToBytes(seqNo), 0, 8);
+        hmac.update(header, 0, header.length);
         hmac.update(iv, 0, 16);
         hmac.update(res, 0, content.length + 4);
         hmac.doFinal(res, content.length + 4);
@@ -63,7 +65,7 @@ public class CBCHmacPackage {
         return cbcBlockCipher.encrypt(iv, res);
     }
 
-    public byte[] decryptPackage(long seqNo, byte[] iv, byte[] encryptedContent) throws IntegrityException {
+    public byte[] decryptPackage(byte[] header, byte[] iv, byte[] encryptedContent) throws IntegrityException {
         if (iv.length != 16) {
             throw new IntegrityException("IV MUST be 16 bytes long!");
         }
@@ -73,7 +75,7 @@ public class CBCHmacPackage {
         byte[] hmacValue = new byte[32];
         int length = ByteStrings.bytesToInt(content);
         hmac.reset();
-        hmac.update(ByteStrings.longToBytes(seqNo), 0, 8);
+        hmac.update(header, 0, header.length);
         hmac.update(iv, 0, 16);
         hmac.update(content, 0, length + 4);
         hmac.doFinal(hmacValue, 0);
