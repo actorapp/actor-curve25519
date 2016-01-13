@@ -1,10 +1,7 @@
 package im.actor.crypto;
 
-import im.actor.crypto.primitives.aes.AESFastEngine;
-import im.actor.crypto.primitives.digest.SHA256;
-import im.actor.crypto.primitives.hmac.HMAC;
-import im.actor.crypto.primitives.kdf.HKDF;
-import im.actor.crypto.primitives.modes.CBCBlockCipher;
+import im.actor.crypto.box.ActorBox;
+import im.actor.crypto.box.ActorBoxKey;
 import im.actor.crypto.primitives.util.ByteStrings;
 import im.actor.crypto.ratchet.*;
 import org.junit.Test;
@@ -48,46 +45,39 @@ public class TestRatchet {
 
         // Encryption
 
-        byte[] message = "Hey!Hey!Hey!Hey!".getBytes(); // Temporarry without padding
+        byte[] message = "Hey! Let's encrypt!".getBytes();
 
         RatchetMessage encMessage;
         {
-            RatchetMessageKey ratchetMessageKey =
-                    RatchetMessageKey.buildKey(alice_root_chain_key, 0);
+            ActorBoxKey ratchetMessageKey = RatchetMessageKey.buildKey(alice_root_chain_key, 0);
 
-            byte[] iv = new byte[16];
-            random.nextBytes(iv);
-
-            CBCBlockCipher blockCipher = new CBCBlockCipher(new AESFastEngine(ratchetMessageKey.getCipherKey()));
-            byte[] res = blockCipher.encrypt(iv, message);
-
-            byte[] mac = new byte[32];
-            HMAC msgHmac = new HMAC(ratchetMessageKey.getMacKey(), new SHA256());
-            msgHmac.update(res, 0, res.length);
-            msgHmac.doFinal(mac, 0);
-
-            encMessage = new RatchetMessage(
-                    0, 0,
+            byte[] header = ByteStrings.merge(
+                    ByteStrings.longToBytes(0), /*Alice Initial Ephermal*/
+                    ByteStrings.longToBytes(0), /*Bob Initial Ephermal*/
                     aliceEphermalKeys[1].getKey(),
                     bobEphermalKeys[1].getKey(),
-                    0,
-                    iv, res, mac);
+                    ByteStrings.intToBytes(0)); /* Message Index */
+
+            byte[] random32 = new byte[32];
+            random.nextBytes(random32);
+
+            byte[] data = ActorBox.closeBox(header, message, random32, ratchetMessageKey);
+
+            encMessage = new RatchetMessage(0, 0, aliceEphermalKeys[1].getKey(), bobEphermalKeys[1].getKey(), 0, data);
         }
 
         // Decryption
         {
-            RatchetMessageKey ratchetMessageKey =
-                    RatchetMessageKey.buildKey(bob_root_chain_key, 0);
+            ActorBoxKey ratchetMessageKey = RatchetMessageKey.buildKey(bob_root_chain_key, 0);
 
-            byte[] mac = new byte[32];
-            HMAC msgHmac = new HMAC(ratchetMessageKey.getMacKey(), new SHA256());
-            msgHmac.update(encMessage.getCipherMessage(), 0, encMessage.getCipherMessage().length);
-            msgHmac.doFinal(mac, 0);
+            byte[] header = ByteStrings.merge(
+                    ByteStrings.longToBytes(encMessage.getSenderEphermalId()), /*Alice Initial Ephermal*/
+                    ByteStrings.longToBytes(encMessage.getReceiverEphermalId()), /*Bob Initial Ephermal*/
+                    encMessage.getSenderEphermal(),
+                    encMessage.getReceiverEphermal(),
+                    ByteStrings.intToBytes(encMessage.getMessageIndex())); /* Message Index */
 
-            assertArrayEquals(mac, encMessage.getMac());
-
-            CBCBlockCipher blockCipher = new CBCBlockCipher(new AESFastEngine(ratchetMessageKey.getCipherKey()));
-            byte[] data = blockCipher.decrypt(encMessage.getIv(), encMessage.getCipherMessage());
+            byte[] data = ActorBox.openBox(header,encMessage.getCipherBox(),ratchetMessageKey);
 
             assertArrayEquals(data, message);
         }

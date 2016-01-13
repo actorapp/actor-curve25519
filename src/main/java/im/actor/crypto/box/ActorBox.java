@@ -1,4 +1,4 @@
-package im.actor.crypto.container;
+package im.actor.crypto.box;
 
 import im.actor.crypto.IntegrityException;
 import im.actor.crypto.primitives.aes.AESFastEngine;
@@ -26,10 +26,10 @@ public class ActorBox {
      * @throws IntegrityException
      */
     public static byte[] openBox(byte[] header, byte[] cipherText, ActorBoxKey key) throws IntegrityException {
-        CBCHmacContainer aesCipher =
-                new CBCHmacContainer(new AESFastEngine(key.getKeyAES()), new SHA256(), key.getMacAES());
-        CBCHmacContainer kuzCipher =
-                new CBCHmacContainer(new KuznechikCipher(key.getKeyKuz()), new Streebog256(), key.getMacKuz());
+        CBCHmacBox aesCipher =
+                new CBCHmacBox(new AESFastEngine(key.getKeyAES()), new SHA256(), key.getMacAES());
+        CBCHmacBox kuzCipher =
+                new CBCHmacBox(new KuznechikCipher(key.getKeyKuz()), new Streebog256(), key.getMacKuz());
         byte[] kuzPackage = aesCipher.decryptPackage(header,
                 ByteStrings.substring(cipherText, 0, 16),
                 ByteStrings.substring(cipherText, 16, cipherText.length - 16));
@@ -61,8 +61,8 @@ public class ActorBox {
      * @throws IntegrityException
      */
     public static byte[] closeBox(byte[] header, byte[] plainText, byte[] random32, ActorBoxKey key) throws IntegrityException {
-        CBCHmacContainer aesCipher = new CBCHmacContainer(new AESFastEngine(key.getKeyAES()), new SHA256(), key.getMacAES());
-        CBCHmacContainer kuzCipher = new CBCHmacContainer(new KuznechikCipher(key.getKeyKuz()), new Streebog256(), key.getMacKuz());
+        CBCHmacBox aesCipher = new CBCHmacBox(new AESFastEngine(key.getKeyAES()), new SHA256(), key.getMacAES());
+        CBCHmacBox kuzCipher = new CBCHmacBox(new KuznechikCipher(key.getKeyKuz()), new Streebog256(), key.getMacKuz());
 
         // Calculating padding
         int paddingSize = (plainText.length + 1) % 16;

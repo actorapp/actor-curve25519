@@ -1,7 +1,7 @@
 package im.actor.crypto;
 
-import im.actor.crypto.container.ActorBox;
-import im.actor.crypto.container.ActorBoxKey;
+import im.actor.crypto.box.ActorBox;
+import im.actor.crypto.box.ActorBoxKey;
 import org.junit.Test;
 
 import java.security.SecureRandom;

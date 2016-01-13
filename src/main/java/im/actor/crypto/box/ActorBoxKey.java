@@ -1,4 +1,4 @@
-package im.actor.crypto.container;
+package im.actor.crypto.box;
 
 import im.actor.crypto.primitives.util.ByteStrings;
 

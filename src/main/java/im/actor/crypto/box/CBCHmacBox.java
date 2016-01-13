@@ -1,4 +1,4 @@
-package im.actor.crypto.container;
+package im.actor.crypto.box;
 
 import im.actor.crypto.IntegrityException;
 import im.actor.crypto.primitives.BlockCipher;
@@ -16,12 +16,12 @@ import im.actor.crypto.primitives.padding.PKCS7Padding;
  * 1) content.length[4 bytes]
  * 2) content[content.length]
  * 4) HMAC[HMAC.lenght]
- * 5) TLS-like padding
+ * 5) PCKS#7 padding
  * Then this package is encrypted with baseCipher in CBC mode
  *
  * @author Steve Kite (steve@actor.im)
  */
-public class CBCHmacContainer {
+public class CBCHmacBox {
 
     private final CBCBlockCipher cbcBlockCipher;
     private final BlockCipher baseCipher;
@@ -30,7 +30,7 @@ public class CBCHmacContainer {
     private final byte[] hmacKey;
     private final Padding padding;
 
-    public CBCHmacContainer(BlockCipher baseCipher, Digest baseDigest, byte[] hmacKey) {
+    public CBCHmacBox(BlockCipher baseCipher, Digest baseDigest, byte[] hmacKey) {
         this.cbcBlockCipher = new CBCBlockCipher(baseCipher);
         this.baseCipher = baseCipher;
         this.baseDigest = baseDigest;

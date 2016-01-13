@@ -6,21 +6,20 @@ public class RatchetMessage {
     private byte[] senderEphermal;
     private byte[] receiverEphermal;
     private int messageIndex;
-    private byte[] iv;
-    private byte[] cipherMessage;
-    private byte[] mac;
+    private byte[] cipherBox;
 
-    public RatchetMessage(long senderEphermalId, long receiverEphermalId, byte[] senderEphermal, byte[] receiverEphermal,
+    public RatchetMessage(long senderEphermalId,
+                          long receiverEphermalId,
+                          byte[] senderEphermal,
+                          byte[] receiverEphermal,
                           int messageIndex,
-                          byte[] iv, byte[] cipherMessage, byte[] mac) {
+                          byte[] cipherBox) {
         this.senderEphermalId = senderEphermalId;
         this.receiverEphermalId = receiverEphermalId;
         this.senderEphermal = senderEphermal;
         this.receiverEphermal = receiverEphermal;
         this.messageIndex = messageIndex;
-        this.iv = iv;
-        this.cipherMessage = cipherMessage;
-        this.mac = mac;
+        this.cipherBox = cipherBox;
     }
 
     public long getSenderEphermalId() {
@@ -39,16 +38,8 @@ public class RatchetMessage {
         return receiverEphermal;
     }
 
-    public byte[] getIv() {
-        return iv;
-    }
-
-    public byte[] getCipherMessage() {
-        return cipherMessage;
-    }
-
-    public byte[] getMac() {
-        return mac;
+    public byte[] getCipherBox() {
+        return cipherBox;
     }
 
     public int getMessageIndex() {
