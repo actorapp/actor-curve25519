@@ -26,6 +26,22 @@ public class TestSHA256 {
     };
 
     @Test
+    public void testJSSHA256() {
+        SHA256Digest sha256Digest = new SHA256Digest();
+        byte[] dest = new byte[32];
+        byte[] data = messages[3];
+        sha256Digest.reset();
+        sha256Digest.update(data, 0, data.length);
+        sha256Digest.doFinal(dest, 0);
+        byte[] dest2 = new byte[32];
+        for (int j = 0; j < 32; j++) {
+            String dg = digests[3].charAt(j * 2) + "" + digests[3].charAt(j * 2 + 1);
+            dest2[j] = (byte) Integer.parseInt(dg, 16);
+        }
+        assertArrayEquals(dest2, dest);
+    }
+
+    @Test
     public void testSHA256() {
         SHA256Digest sha256Digest = new SHA256Digest();
         for (int i = 0; i < messages.length; i++) {
