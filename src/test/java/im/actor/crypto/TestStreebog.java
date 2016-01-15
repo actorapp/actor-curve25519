@@ -54,4 +54,18 @@ public class TestStreebog {
             assertArrayEquals(res, hash);
         }
     }
+
+//    @Test
+//    public void testPerformance() {
+//        SecureRandom random = new SecureRandom();
+//        for (int i = 0; i < 10000000; i++) {
+//            byte[] data = new byte[128];
+//            random.nextBytes(data);
+//            StreebogDigest digest = new StreebogDigest(32);
+//            byte[] hash = new byte[32];
+//            digest.update(data, 0, data.length);
+//            digest.doFinal(hash, 0);
+//        }
+//        //
+//    }
 }
