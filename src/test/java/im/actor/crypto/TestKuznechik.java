@@ -1,5 +1,6 @@
 package im.actor.crypto;
 
+import im.actor.crypto.primitives.kuznechik.KuznechikMath;
 import im.actor.crypto.primitives.modes.CBCBlockCipher;
 import im.actor.crypto.primitives.kuznechik.KuznechikCipher;
 import org.junit.Test;
@@ -7,6 +8,7 @@ import org.junit.Test;
 import java.security.SecureRandom;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public class TestKuznechik {
 
@@ -67,6 +69,7 @@ public class TestKuznechik {
             byte[] iv = new byte[16];
             secureRandom.nextBytes(data);
             secureRandom.nextBytes(key);
+            secureRandom.nextBytes(iv);
 
             CBCBlockCipher cbcBlockCipher = new CBCBlockCipher(new KuznechikCipher(key));
             byte[] encrypted = cbcBlockCipher.encrypt(iv, data);
@@ -77,7 +80,16 @@ public class TestKuznechik {
     }
 
     @Test
-    public void testWrapper() {
-
+    public void testCustomMulGF256() {
+        for (int i = 0; i < 255; i++) {
+            for (int j = 0; j < 255; j++) {
+                byte r1 = KuznechikMath.kuz_mul_gf256((byte) j, (byte) i);
+                byte r2 = KuznechikMath.kuz_mul_gf256_fast((byte) j, (byte) i);
+                if (r1 != r2) {
+                    System.out.println(Integer.toHexString(j & 0xFF) + " * " + Integer.toHexString(i & 0xFF) + " = {" + Integer.toHexString(r1 & 0xFF) + ", " + Integer.toHexString(r2 & 0xFF) + "}");
+                    throw new RuntimeException();
+                }
+            }
+        }
     }
 }
