@@ -136,7 +136,7 @@ public class KuznechikFastEngine implements BlockCipher {
 
         int[] x = new int[4];
 
-        Pack.bigEndianToInt(data, 0, x);
+        Pack.bigEndianToInt(data, offset, x);
 
         for (int i = 0; i < 9; i++) {
 
@@ -179,7 +179,7 @@ public class KuznechikFastEngine implements BlockCipher {
     @Override
     public void decryptBlock(byte[] data, int offset, byte[] dest, int destOffset) {
         int[] x = new int[4];
-        Pack.bigEndianToInt(data, 0, x);
+        Pack.bigEndianToInt(data, offset, x);
         x[0] = x[0] ^ key[9][0];
         x[1] = x[1] ^ key[9][1];
         x[2] = x[2] ^ key[9][2];

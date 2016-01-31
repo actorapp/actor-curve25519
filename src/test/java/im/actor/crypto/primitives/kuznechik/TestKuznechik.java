@@ -32,7 +32,7 @@ public class TestKuznechik {
                 (byte) 0x5A, (byte) 0x46, (byte) 0x8D, (byte) 0x42, (byte) 0xB9, (byte) 0xD4, (byte) 0xED, (byte) 0xCD
         };
 
-        KuznechikCipher cipher = new KuznechikCipher(key);
+        KuznechikFastEngine cipher = new KuznechikFastEngine(key);
         byte[] encText = new byte[16];
         byte[] decText = new byte[16];
         cipher.encryptBlock(testPlainText, 0, encText, 0);
@@ -51,7 +51,7 @@ public class TestKuznechik {
             secureRandom.nextBytes(data);
             secureRandom.nextBytes(key);
 
-            KuznechikCipher cipher = new KuznechikCipher(key);
+            KuznechikFastEngine cipher = new KuznechikFastEngine(key);
             byte[] encText = new byte[16];
             byte[] decText = new byte[16];
             cipher.encryptBlock(data, 0, encText, 0);
@@ -72,7 +72,7 @@ public class TestKuznechik {
             secureRandom.nextBytes(key);
             secureRandom.nextBytes(iv);
 
-            CBCBlockCipher cbcBlockCipher = new CBCBlockCipher(new KuznechikCipher(key));
+            CBCBlockCipher cbcBlockCipher = new CBCBlockCipher(new KuznechikFastEngine(key));
             byte[] encrypted = cbcBlockCipher.encrypt(iv, data);
             byte[] decrypted = cbcBlockCipher.decrypt(iv, encrypted);
 

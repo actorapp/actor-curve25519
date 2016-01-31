@@ -42,15 +42,18 @@ public class TestKuznechikFast {
             byte[] data2 = new byte[16];
             byte[] data3 = new byte[16];
             byte[] data4 = new byte[16];
+            byte[] data5 = new byte[16];
             for (int i = 0; i < 100; i++) {
                 random.nextBytes(data);
                 fastCipher.encryptBlock(data, 0, data2, 0);
+                slowCipher.encryptBlock(data, 0, data5, 0);
                 slowCipher.decryptBlock(data2, 0, data3, 0);
                 fastCipher.decryptBlock(data2, 0, data4, 0);
                 // slowCipher.decryptBlock(data2, 0, data4, 0);
 
                 assertArrayEquals(data, data3);
                 assertArrayEquals(data, data4);
+                assertArrayEquals(data2, data5);
             }
         }
     }
