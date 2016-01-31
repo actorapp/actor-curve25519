@@ -1,5 +1,6 @@
-package im.actor.crypto;
+package im.actor.crypto.primitives.kuznechik;
 
+import im.actor.crypto.IntegrityException;
 import im.actor.crypto.primitives.kuznechik.KuznechikMath;
 import im.actor.crypto.primitives.modes.CBCBlockCipher;
 import im.actor.crypto.primitives.kuznechik.KuznechikCipher;

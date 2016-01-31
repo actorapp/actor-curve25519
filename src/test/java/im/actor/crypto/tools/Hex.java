@@ -18,4 +18,12 @@ public class Hex {
         }
         return res;
     }
+
+    public static String toHex(byte[] data) {
+        String res = "";
+        for (int i = 0; i < data.length; i++) {
+            res += Integer.toHexString(data[0] & 0xFF) + " ";
+        }
+        return res;
+    }
 }
