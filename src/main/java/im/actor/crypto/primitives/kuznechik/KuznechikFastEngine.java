@@ -149,6 +149,78 @@ public class KuznechikFastEngine implements BlockCipher {
         }
     }
 
+
+    static void kuz_l_fast(int[] w) {
+        int a0 = 0, a1 = 0, a2 = 0, a3 = 0;
+        for (int ind = 0; ind < 16; ind++) {
+            int dataByte = (ind + ((w[ind / 4] >> (3 - ind % 4) * 8) & 0xFF) * 16) * 4;
+
+            a0 = a0 ^ gf256res[dataByte + 0];
+            a1 = a1 ^ gf256res[dataByte + 1];
+            a2 = a2 ^ gf256res[dataByte + 2];
+            a3 = a3 ^ gf256res[dataByte + 3];
+        }
+        w[0] = a0;
+        w[1] = a1;
+        w[2] = a2;
+        w[3] = a3;
+    }
+
+    static void kuz_l(byte[] w) {
+        for (int j = 0; j < 16; j++) {
+            byte x = w[15];
+            w[15] = w[14];
+            x ^= kuz_mul_gf256_fast(w[14], kuz_lvec[14]);
+            w[14] = w[13];
+            x ^= kuz_mul_gf256_fast(w[13], kuz_lvec[13]);
+            w[13] = w[12];
+            x ^= kuz_mul_gf256_fast(w[12], kuz_lvec[12]);
+            w[12] = w[11];
+            x ^= kuz_mul_gf256_fast(w[11], kuz_lvec[11]);
+            w[11] = w[10];
+            x ^= kuz_mul_gf256_fast(w[10], kuz_lvec[10]);
+            w[10] = w[9];
+            x ^= kuz_mul_gf256_fast(w[9], kuz_lvec[9]);
+            w[9] = w[8];
+            x ^= kuz_mul_gf256_fast(w[8], kuz_lvec[8]);
+            w[8] = w[7];
+            x ^= kuz_mul_gf256_fast(w[7], kuz_lvec[7]);
+            w[7] = w[6];
+            x ^= kuz_mul_gf256_fast(w[6], kuz_lvec[6]);
+            w[6] = w[5];
+            x ^= kuz_mul_gf256_fast(w[5], kuz_lvec[5]);
+            w[5] = w[4];
+            x ^= kuz_mul_gf256_fast(w[4], kuz_lvec[4]);
+            w[4] = w[3];
+            x ^= kuz_mul_gf256_fast(w[3], kuz_lvec[3]);
+            w[3] = w[2];
+            x ^= kuz_mul_gf256_fast(w[2], kuz_lvec[2]);
+            w[2] = w[1];
+            x ^= kuz_mul_gf256_fast(w[1], kuz_lvec[1]);
+            w[1] = w[0];
+            x ^= kuz_mul_gf256_fast(w[0], kuz_lvec[0]);
+            w[0] = x;
+        }
+    }
+
+    static void kuz_l_inv(byte[] w) {
+        for (int j = 0; j < 16; j++) {
+            byte x = w[0];
+            for (int i = 0; i < 15; i++) {
+                w[i] = w[i + 1];
+                x ^= kuz_mul_gf256_fast(w[i], kuz_lvec[i]);
+            }
+            w[15] = x;
+        }
+    }
+
+    static byte kuz_mul_gf256_fast(byte a, byte b) {
+        if (a == 0 || b == 0) return 0;
+        int t = (gf256_L[(a & 0xff)] & 0xff) + (gf256_L[(b & 0xff)] & 0xff);
+        if (t > 255) t = t - 255;
+        return gf256_E[(t & 0xff)];
+    }
+
     private static final int BLOCK_SIZE = 16;
 
     private int[][] key;
@@ -161,8 +233,9 @@ public class KuznechikFastEngine implements BlockCipher {
         this.key = convertKey(key);
     }
 
-    int[][] getKey() {
-        return key;
+    @Override
+    public int getBlockSize() {
+        return BLOCK_SIZE;
     }
 
     @Override
@@ -347,24 +420,16 @@ public class KuznechikFastEngine implements BlockCipher {
         Pack.intToBigEndian(C3, dest, destOffset + 12);
     }
 
-    @Override
-    public int getBlockSize() {
-        return BLOCK_SIZE;
+    int[][] getKey() {
+        return key;
     }
 
-    /**
-     * Converting binary representation of a key to internal format
-     *
-     * @param key raw key
-     * @return key in internal format
-     */
     static int[][] convertKey(byte[] key) {
         if (key.length != 32) {
             throw new RuntimeException("Key might be 32 bytes length");
         }
 
         int[][] kuz = new int[10][4];
-        byte[] tmp = new byte[16];
 
         // w128_t c, x, y, z;
         int[] c = new int[4];
@@ -389,7 +454,7 @@ public class KuznechikFastEngine implements BlockCipher {
             c[2] = 0;
             c[3] = i;
 
-            kuz_l(c, tmp);
+            kuz_l_fast(c);
 
             z[0] = x[0] ^ c[0];
             z[1] = x[1] ^ c[1];
@@ -416,7 +481,7 @@ public class KuznechikFastEngine implements BlockCipher {
                     + ((kuz_pi[(z[3] >> 16) & 0xFF] & 0xFF) << 16)
                     + ((kuz_pi[(z[3] >> 24) & 0xFF] & 0xFF) << 24);
 
-            kuz_l(z, tmp);
+            kuz_l_fast(z);
 
             z[0] = z[0] ^ y[0];
             z[1] = z[1] ^ y[1];
@@ -447,128 +512,5 @@ public class KuznechikFastEngine implements BlockCipher {
         }
 
         return kuz;
-    }
-
-    static void kuz_l(int[] w, byte[] tmp) {
-        Pack.intToBigEndian(w, tmp, 0);
-        kuz_l(tmp);
-        Pack.bigEndianToInt(tmp, 0, w);
-    }
-
-//    static void kuz_l_inv(int[] w, byte[] tmp) {
-//        Pack.intToBigEndian(w, tmp, 0);
-//        kuz_l_inv(tmp);
-//        Pack.bigEndianToInt(tmp, 0, w);
-//    }
-//
-//    static void kuz_l_inv_fast(byte[] w) {
-//        int[] a = new int[4];
-//        for (int ind = 0; ind < 16; ind++) {
-//            int dataByte = w[ind] & 0xFF;
-//            int[] mapped = gf256resInv[ind][dataByte];
-//            a[0] = a[0] ^ mapped[0];
-//            a[1] = a[1] ^ mapped[1];
-//            a[2] = a[2] ^ mapped[2];
-//            a[3] = a[3] ^ mapped[3];
-//        }
-//        Pack.intToBigEndian(a, w, 0);
-//    }
-//
-//    static void kuz_l_inv_fast(int[] w) {
-//
-//        int a0 = 0, a1 = 0, a2 = 0, a3 = 0;
-//        for (int ind = 0; ind < 16; ind++) {
-//            int dataByte = (w[ind / 4] >> (3 - ind % 4) * 8) & 0xFF;
-//            int[] mapped = gf256resInv[ind][dataByte];
-//            a0 = a0 ^ mapped[0];
-//            a1 = a1 ^ mapped[1];
-//            a2 = a2 ^ mapped[2];
-//            a3 = a3 ^ mapped[3];
-//        }
-//        w[0] = a0;
-//        w[1] = a1;
-//        w[2] = a2;
-//        w[3] = a3;
-//    }
-//
-//    static void kuz_l_fast(byte[] w) {
-//        byte[] a = new byte[16];
-//        for (int ind = 0; ind < 16; ind++) {
-//            for (int j = 0; j < 16; j++) {
-//                a[j] = (byte) ((a[j] & 0xFF) ^ (gf256res[ind][w[ind] & 0xFF][j] & 0xFF));
-//            }
-//        }
-//        for (int ind = 0; ind < 16; ind++) {
-//            w[ind] = a[ind];
-//        }
-//    }
-
-    static void kuz_l(byte[] w) {
-        for (int j = 0; j < 16; j++) {
-            byte x = w[15];
-            w[15] = w[14];
-            x ^= kuz_mul_gf256_fast(w[14], kuz_lvec[14]);
-            w[14] = w[13];
-            x ^= kuz_mul_gf256_fast(w[13], kuz_lvec[13]);
-            w[13] = w[12];
-            x ^= kuz_mul_gf256_fast(w[12], kuz_lvec[12]);
-            w[12] = w[11];
-            x ^= kuz_mul_gf256_fast(w[11], kuz_lvec[11]);
-            w[11] = w[10];
-            x ^= kuz_mul_gf256_fast(w[10], kuz_lvec[10]);
-            w[10] = w[9];
-            x ^= kuz_mul_gf256_fast(w[9], kuz_lvec[9]);
-            w[9] = w[8];
-            x ^= kuz_mul_gf256_fast(w[8], kuz_lvec[8]);
-            w[8] = w[7];
-            x ^= kuz_mul_gf256_fast(w[7], kuz_lvec[7]);
-            w[7] = w[6];
-            x ^= kuz_mul_gf256_fast(w[6], kuz_lvec[6]);
-            w[6] = w[5];
-            x ^= kuz_mul_gf256_fast(w[5], kuz_lvec[5]);
-            w[5] = w[4];
-            x ^= kuz_mul_gf256_fast(w[4], kuz_lvec[4]);
-            w[4] = w[3];
-            x ^= kuz_mul_gf256_fast(w[3], kuz_lvec[3]);
-            w[3] = w[2];
-            x ^= kuz_mul_gf256_fast(w[2], kuz_lvec[2]);
-            w[2] = w[1];
-            x ^= kuz_mul_gf256_fast(w[1], kuz_lvec[1]);
-            w[1] = w[0];
-            x ^= kuz_mul_gf256_fast(w[0], kuz_lvec[0]);
-            w[0] = x;
-        }
-    }
-
-    // inverse of linear operation l
-    static void kuz_l_inv(byte[] w) {
-
-        // 16 rounds
-        for (int j = 0; j < 16; j++) {
-
-            // x = w->b[0];
-            byte x = w[0];
-
-            for (int i = 0; i < 15; i++) {
-
-                // w->b[i] = w->b[i + 1];
-                w[i] = w[i + 1];
-
-                // x ^= kuz_mul_gf256(w->b[i], kuz_lvec[i]);
-                x ^= kuz_mul_gf256_fast(w[i], kuz_lvec[i]);
-            }
-
-            // w->b[15] = x;
-            w[15] = x;
-        }
-    }
-
-    // Fast implementation of multiplication in GF(2^8) on x^8 + x^7 + x^6 + x + 1
-    // Implemented with
-    static byte kuz_mul_gf256_fast(byte a, byte b) {
-        if (a == 0 || b == 0) return 0;
-        int t = (gf256_L[(a & 0xff)] & 0xff) + (gf256_L[(b & 0xff)] & 0xff);
-        if (t > 255) t = t - 255;
-        return gf256_E[(t & 0xff)];
     }
 }
