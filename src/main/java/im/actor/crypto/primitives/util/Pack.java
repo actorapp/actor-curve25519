@@ -6,7 +6,7 @@ package im.actor.crypto.primitives.util;
  * Refactored by Steve Kite (steve@actor.im)
  */
 public abstract class Pack {
-    
+
     public static int bigEndianToInt(byte[] bs, int off) {
         int n = bs[off] << 24;
         n |= (bs[++off] & 0xff) << 16;
@@ -18,6 +18,13 @@ public abstract class Pack {
     public static void bigEndianToInt(byte[] bs, int off, int[] ns) {
         for (int i = 0; i < ns.length; ++i) {
             ns[i] = bigEndianToInt(bs, off);
+            off += 4;
+        }
+    }
+
+    public static void bigEndianToInt(byte[] bs, int off, int[] ns, int destOffset, int count) {
+        for (int i = 0; i < count; ++i) {
+            ns[destOffset++] = bigEndianToInt(bs, off);
             off += 4;
         }
     }

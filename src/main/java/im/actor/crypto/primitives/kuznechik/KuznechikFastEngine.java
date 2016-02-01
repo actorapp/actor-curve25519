@@ -122,13 +122,53 @@ public class KuznechikFastEngine implements BlockCipher {
             (byte) 0x37, (byte) 0xc4, (byte) 0xaf, (byte) 0x24, (byte) 0x2e, (byte) 0x6f, (byte) 0x8a, (byte) 0xa8, (byte) 0xf7, (byte) 0x60, (byte) 0x49, (byte) 0xe3, (byte) 0x80, (byte) 0x86, (byte) 0x59, (byte) 0x07,
     };
 
+    private static final int[] gf256res;
+    private static final int[] gf256resInv;
+
+    static {
+        gf256res = new int[16 * 256 * 4];
+        gf256resInv = new int[16 * 256 * 4];
+
+        byte[] tmp = new byte[16];
+        for (int index = 0; index < 16; index++) {
+            for (int i = 0; i < 256; i++) {
+                for (int l = 0; l < 16; l++) {
+                    tmp[l] = 0;
+                }
+                tmp[index] = (byte) i;
+                kuz_l(tmp);
+                Pack.bigEndianToInt(tmp, 0, gf256res, (index + (16 * i)) * 4, 4);
+
+                for (int l = 0; l < 16; l++) {
+                    tmp[l] = 0;
+                }
+                tmp[index] = (byte) i;
+                kuz_l_inv(tmp);
+                Pack.bigEndianToInt(tmp, 0, gf256resInv, (index + (16 * i)) * 4, 4);
+            }
+        }
+    }
+
     private static final int BLOCK_SIZE = 16;
 
     private int[][] key;
     private byte[] tmp = new byte[16];
+    private int C0;
+    private int C1;
+    private int C2;
+    private int C3;
+    private int K0[];
+    private int K1[];
+    private int K2[];
+    private int K3[];
+
 
     public KuznechikFastEngine(byte[] key) {
         this.key = convertKey(key);
+    }
+
+    int[][] getKey() {
+        return key;
     }
 
     @Override
@@ -165,7 +205,6 @@ public class KuznechikFastEngine implements BlockCipher {
                     + ((kuz_pi[(x[3] >> 16) & 0xFF] & 0xFF) << 16)
                     + ((kuz_pi[(x[3] >> 24) & 0xFF] & 0xFF) << 24);
 
-
             kuz_l(x, tmp);
         }
 
@@ -178,45 +217,101 @@ public class KuznechikFastEngine implements BlockCipher {
 
     @Override
     public void decryptBlock(byte[] data, int offset, byte[] dest, int destOffset) {
-        int[] x = new int[4];
-        Pack.bigEndianToInt(data, offset, x);
-        x[0] = x[0] ^ key[9][0];
-        x[1] = x[1] ^ key[9][1];
-        x[2] = x[2] ^ key[9][2];
-        x[3] = x[3] ^ key[9][3];
+
+        int A0, A1, A2, A3, T0, T1, T2, T3;
+
+        unpackBlock(data, offset);
+
+        C0 = C0 ^ key[9][0];
+        C1 = C1 ^ key[9][1];
+        C2 = C2 ^ key[9][2];
+        C3 = C3 ^ key[9][3];
 
         for (int i = 8; i >= 0; i--) {
 
-            kuz_l_inv(x, tmp);
+            T0 = (0 + (((C0 >> 24) & 0xFF) << 4)) << 2;
+            T1 = (1 + (((C0 >> 16) & 0xFF) << 4)) << 2;
+            T2 = (2 + (((C0 >> 8) & 0xFF) << 4)) << 2;
+            T3 = (3 + (((C0 >> 0) & 0xFF) << 4)) << 2;
 
-            x[0] = (kuz_pi_inv[x[0] & 0xFF] & 0xFF)
-                    + ((kuz_pi_inv[(x[0] >> 8) & 0xFF] & 0xFF) << 8)
-                    + ((kuz_pi_inv[(x[0] >> 16) & 0xFF] & 0xFF) << 16)
-                    + ((kuz_pi_inv[(x[0] >> 24) & 0xFF] & 0xFF) << 24);
-
-            x[1] = (kuz_pi_inv[x[1] & 0xFF] & 0xFF)
-                    + ((kuz_pi_inv[(x[1] >> 8) & 0xFF] & 0xFF) << 8)
-                    + ((kuz_pi_inv[(x[1] >> 16) & 0xFF] & 0xFF) << 16)
-                    + ((kuz_pi_inv[(x[1] >> 24) & 0xFF] & 0xFF) << 24);
-
-            x[2] = (kuz_pi_inv[x[2] & 0xFF] & 0xFF)
-                    + ((kuz_pi_inv[(x[2] >> 8) & 0xFF] & 0xFF) << 8)
-                    + ((kuz_pi_inv[(x[2] >> 16) & 0xFF] & 0xFF) << 16)
-                    + ((kuz_pi_inv[(x[2] >> 24) & 0xFF] & 0xFF) << 24);
-
-            x[3] = (kuz_pi_inv[x[3] & 0xFF] & 0xFF)
-                    + ((kuz_pi_inv[(x[3] >> 8) & 0xFF] & 0xFF) << 8)
-                    + ((kuz_pi_inv[(x[3] >> 16) & 0xFF] & 0xFF) << 16)
-                    + ((kuz_pi_inv[(x[3] >> 24) & 0xFF] & 0xFF) << 24);
+            A0 = gf256resInv[T0 + 0] ^ gf256resInv[T1 + 0] ^ gf256resInv[T2 + 0] ^ gf256resInv[T3 + 0];
+            A1 = gf256resInv[T0 + 1] ^ gf256resInv[T1 + 1] ^ gf256resInv[T2 + 1] ^ gf256resInv[T3 + 1];
+            A2 = gf256resInv[T0 + 2] ^ gf256resInv[T1 + 2] ^ gf256resInv[T2 + 2] ^ gf256resInv[T3 + 2];
+            A3 = gf256resInv[T0 + 3] ^ gf256resInv[T1 + 3] ^ gf256resInv[T2 + 3] ^ gf256resInv[T3 + 3];
 
 
-            x[0] = x[0] ^ key[i][0];
-            x[1] = x[1] ^ key[i][1];
-            x[2] = x[2] ^ key[i][2];
-            x[3] = x[3] ^ key[i][3];
+            T0 = (4 + (((C1 >> 24) & 0xFF) << 4)) << 2;
+            T1 = (5 + (((C1 >> 16) & 0xFF) << 4)) << 2;
+            T2 = (6 + (((C1 >> 8) & 0xFF) << 4)) << 2;
+            T3 = (7 + (((C1 >> 0) & 0xFF) << 4)) << 2;
+            A0 = A0 ^ gf256resInv[T0 + 0] ^ gf256resInv[T1 + 0] ^ gf256resInv[T2 + 0] ^ gf256resInv[T3 + 0];
+            A1 = A1 ^ gf256resInv[T0 + 1] ^ gf256resInv[T1 + 1] ^ gf256resInv[T2 + 1] ^ gf256resInv[T3 + 1];
+            A2 = A2 ^ gf256resInv[T0 + 2] ^ gf256resInv[T1 + 2] ^ gf256resInv[T2 + 2] ^ gf256resInv[T3 + 2];
+            A3 = A3 ^ gf256resInv[T0 + 3] ^ gf256resInv[T1 + 3] ^ gf256resInv[T2 + 3] ^ gf256resInv[T3 + 3];
+
+
+            T0 = (8 + (((C2 >> 24) & 0xFF) << 4)) << 2;
+            T1 = (9 + (((C2 >> 16) & 0xFF) << 4)) << 2;
+            T2 = (10 + (((C2 >> 8) & 0xFF) << 4)) << 2;
+            T3 = (11 + (((C2 >> 0) & 0xFF) << 4)) << 2;
+            A0 = A0 ^ gf256resInv[T0 + 0] ^ gf256resInv[T1 + 0] ^ gf256resInv[T2 + 0] ^ gf256resInv[T3 + 0];
+            A1 = A1 ^ gf256resInv[T0 + 1] ^ gf256resInv[T1 + 1] ^ gf256resInv[T2 + 1] ^ gf256resInv[T3 + 1];
+            A2 = A2 ^ gf256resInv[T0 + 2] ^ gf256resInv[T1 + 2] ^ gf256resInv[T2 + 2] ^ gf256resInv[T3 + 2];
+            A3 = A3 ^ gf256resInv[T0 + 3] ^ gf256resInv[T1 + 3] ^ gf256resInv[T2 + 3] ^ gf256resInv[T3 + 3];
+
+
+            T0 = (12 + (((C3 >> 24) & 0xFF) << 4)) << 2;
+            T1 = (13 + (((C3 >> 16) & 0xFF) << 4)) << 2;
+            T2 = (14 + (((C3 >> 8) & 0xFF) << 4)) << 2;
+            T3 = (15 + (((C3 >> 0) & 0xFF) << 4)) << 2;
+            C0 = A0 ^ gf256resInv[T0 + 0] ^ gf256resInv[T1 + 0] ^ gf256resInv[T2 + 0] ^ gf256resInv[T3 + 0];
+            C1 = A1 ^ gf256resInv[T0 + 1] ^ gf256resInv[T1 + 1] ^ gf256resInv[T2 + 1] ^ gf256resInv[T3 + 1];
+            C2 = A2 ^ gf256resInv[T0 + 2] ^ gf256resInv[T1 + 2] ^ gf256resInv[T2 + 2] ^ gf256resInv[T3 + 2];
+            C3 = A3 ^ gf256resInv[T0 + 3] ^ gf256resInv[T1 + 3] ^ gf256resInv[T2 + 3] ^ gf256resInv[T3 + 3];
+
+
+            C0 = (kuz_pi_inv[C0 & 0xFF] & 0xFF)
+                    + ((kuz_pi_inv[(C0 >> 8) & 0xFF] & 0xFF) << 8)
+                    + ((kuz_pi_inv[(C0 >> 16) & 0xFF] & 0xFF) << 16)
+                    + ((kuz_pi_inv[(C0 >> 24) & 0xFF] & 0xFF) << 24);
+
+            C1 = (kuz_pi_inv[C1 & 0xFF] & 0xFF)
+                    + ((kuz_pi_inv[(C1 >> 8) & 0xFF] & 0xFF) << 8)
+                    + ((kuz_pi_inv[(C1 >> 16) & 0xFF] & 0xFF) << 16)
+                    + ((kuz_pi_inv[(C1 >> 24) & 0xFF] & 0xFF) << 24);
+
+            C2 = (kuz_pi_inv[C2 & 0xFF] & 0xFF)
+                    + ((kuz_pi_inv[(C2 >> 8) & 0xFF] & 0xFF) << 8)
+                    + ((kuz_pi_inv[(C2 >> 16) & 0xFF] & 0xFF) << 16)
+                    + ((kuz_pi_inv[(C2 >> 24) & 0xFF] & 0xFF) << 24);
+
+            C3 = (kuz_pi_inv[C3 & 0xFF] & 0xFF)
+                    + ((kuz_pi_inv[(C3 >> 8) & 0xFF] & 0xFF) << 8)
+                    + ((kuz_pi_inv[(C3 >> 16) & 0xFF] & 0xFF) << 16)
+                    + ((kuz_pi_inv[(C3 >> 24) & 0xFF] & 0xFF) << 24);
+
+
+            C0 = C0 ^ key[i][0];
+            C1 = C1 ^ key[i][1];
+            C2 = C2 ^ key[i][2];
+            C3 = C3 ^ key[i][3];
         }
 
-        Pack.intToBigEndian(x, dest, destOffset);
+        packBlock(dest, destOffset);
+    }
+
+    private void unpackBlock(byte[] bytes, int off) {
+        this.C0 = Pack.bigEndianToInt(bytes, off);
+        this.C1 = Pack.bigEndianToInt(bytes, off + 4);
+        this.C2 = Pack.bigEndianToInt(bytes, off + 8);
+        this.C3 = Pack.bigEndianToInt(bytes, off + 12);
+    }
+
+    private void packBlock(byte[] dest, int destOffset) {
+        Pack.intToBigEndian(C0, dest, destOffset);
+        Pack.intToBigEndian(C1, dest, destOffset + 4);
+        Pack.intToBigEndian(C2, dest, destOffset + 8);
+        Pack.intToBigEndian(C3, dest, destOffset + 12);
     }
 
     @Override
@@ -321,18 +416,59 @@ public class KuznechikFastEngine implements BlockCipher {
         return kuz;
     }
 
-
     static void kuz_l(int[] w, byte[] tmp) {
         Pack.intToBigEndian(w, tmp, 0);
         kuz_l(tmp);
         Pack.bigEndianToInt(tmp, 0, w);
     }
 
-    static void kuz_l_inv(int[] w, byte[] tmp) {
-        Pack.intToBigEndian(w, tmp, 0);
-        kuz_l_inv(tmp);
-        Pack.bigEndianToInt(tmp, 0, w);
-    }
+//    static void kuz_l_inv(int[] w, byte[] tmp) {
+//        Pack.intToBigEndian(w, tmp, 0);
+//        kuz_l_inv(tmp);
+//        Pack.bigEndianToInt(tmp, 0, w);
+//    }
+//
+//    static void kuz_l_inv_fast(byte[] w) {
+//        int[] a = new int[4];
+//        for (int ind = 0; ind < 16; ind++) {
+//            int dataByte = w[ind] & 0xFF;
+//            int[] mapped = gf256resInv[ind][dataByte];
+//            a[0] = a[0] ^ mapped[0];
+//            a[1] = a[1] ^ mapped[1];
+//            a[2] = a[2] ^ mapped[2];
+//            a[3] = a[3] ^ mapped[3];
+//        }
+//        Pack.intToBigEndian(a, w, 0);
+//    }
+//
+//    static void kuz_l_inv_fast(int[] w) {
+//
+//        int a0 = 0, a1 = 0, a2 = 0, a3 = 0;
+//        for (int ind = 0; ind < 16; ind++) {
+//            int dataByte = (w[ind / 4] >> (3 - ind % 4) * 8) & 0xFF;
+//            int[] mapped = gf256resInv[ind][dataByte];
+//            a0 = a0 ^ mapped[0];
+//            a1 = a1 ^ mapped[1];
+//            a2 = a2 ^ mapped[2];
+//            a3 = a3 ^ mapped[3];
+//        }
+//        w[0] = a0;
+//        w[1] = a1;
+//        w[2] = a2;
+//        w[3] = a3;
+//    }
+//
+//    static void kuz_l_fast(byte[] w) {
+//        byte[] a = new byte[16];
+//        for (int ind = 0; ind < 16; ind++) {
+//            for (int j = 0; j < 16; j++) {
+//                a[j] = (byte) ((a[j] & 0xFF) ^ (gf256res[ind][w[ind] & 0xFF][j] & 0xFF));
+//            }
+//        }
+//        for (int ind = 0; ind < 16; ind++) {
+//            w[ind] = a[ind];
+//        }
+//    }
 
     static void kuz_l(byte[] w) {
         for (int j = 0; j < 16; j++) {
