@@ -152,16 +152,10 @@ public class KuznechikFastEngine implements BlockCipher {
     private static final int BLOCK_SIZE = 16;
 
     private int[][] key;
-    private byte[] tmp = new byte[16];
     private int C0;
     private int C1;
     private int C2;
     private int C3;
-    private int K0[];
-    private int K1[];
-    private int K2[];
-    private int K3[];
-
 
     public KuznechikFastEngine(byte[] key) {
         this.key = convertKey(key);
@@ -174,45 +168,84 @@ public class KuznechikFastEngine implements BlockCipher {
     @Override
     public void encryptBlock(byte[] data, int offset, byte[] dest, int destOffset) {
 
-        int[] x = new int[4];
+        int A0, A1, A2, A3, T0, T1, T2, T3;
 
-        Pack.bigEndianToInt(data, offset, x);
+        unpackBlock(data, offset);
 
         for (int i = 0; i < 9; i++) {
 
-            x[0] = x[0] ^ key[i][0];
-            x[1] = x[1] ^ key[i][1];
-            x[2] = x[2] ^ key[i][2];
-            x[3] = x[3] ^ key[i][3];
+            C0 = C0 ^ key[i][0];
+            C1 = C1 ^ key[i][1];
+            C2 = C2 ^ key[i][2];
+            C3 = C3 ^ key[i][3];
 
-            x[0] = (kuz_pi[x[0] & 0xFF] & 0xFF)
-                    + ((kuz_pi[(x[0] >> 8) & 0xFF] & 0xFF) << 8)
-                    + ((kuz_pi[(x[0] >> 16) & 0xFF] & 0xFF) << 16)
-                    + ((kuz_pi[(x[0] >> 24) & 0xFF] & 0xFF) << 24);
+            C0 = (kuz_pi[C0 & 0xFF] & 0xFF)
+                    + ((kuz_pi[(C0 >> 8) & 0xFF] & 0xFF) << 8)
+                    + ((kuz_pi[(C0 >> 16) & 0xFF] & 0xFF) << 16)
+                    + ((kuz_pi[(C0 >> 24) & 0xFF] & 0xFF) << 24);
 
-            x[1] = (kuz_pi[x[1] & 0xFF] & 0xFF)
-                    + ((kuz_pi[(x[1] >> 8) & 0xFF] & 0xFF) << 8)
-                    + ((kuz_pi[(x[1] >> 16) & 0xFF] & 0xFF) << 16)
-                    + ((kuz_pi[(x[1] >> 24) & 0xFF] & 0xFF) << 24);
+            C1 = (kuz_pi[C1 & 0xFF] & 0xFF)
+                    + ((kuz_pi[(C1 >> 8) & 0xFF] & 0xFF) << 8)
+                    + ((kuz_pi[(C1 >> 16) & 0xFF] & 0xFF) << 16)
+                    + ((kuz_pi[(C1 >> 24) & 0xFF] & 0xFF) << 24);
 
-            x[2] = (kuz_pi[x[2] & 0xFF] & 0xFF)
-                    + ((kuz_pi[(x[2] >> 8) & 0xFF] & 0xFF) << 8)
-                    + ((kuz_pi[(x[2] >> 16) & 0xFF] & 0xFF) << 16)
-                    + ((kuz_pi[(x[2] >> 24) & 0xFF] & 0xFF) << 24);
+            C2 = (kuz_pi[C2 & 0xFF] & 0xFF)
+                    + ((kuz_pi[(C2 >> 8) & 0xFF] & 0xFF) << 8)
+                    + ((kuz_pi[(C2 >> 16) & 0xFF] & 0xFF) << 16)
+                    + ((kuz_pi[(C2 >> 24) & 0xFF] & 0xFF) << 24);
 
-            x[3] = (kuz_pi[x[3] & 0xFF] & 0xFF)
-                    + ((kuz_pi[(x[3] >> 8) & 0xFF] & 0xFF) << 8)
-                    + ((kuz_pi[(x[3] >> 16) & 0xFF] & 0xFF) << 16)
-                    + ((kuz_pi[(x[3] >> 24) & 0xFF] & 0xFF) << 24);
+            C3 = (kuz_pi[C3 & 0xFF] & 0xFF)
+                    + ((kuz_pi[(C3 >> 8) & 0xFF] & 0xFF) << 8)
+                    + ((kuz_pi[(C3 >> 16) & 0xFF] & 0xFF) << 16)
+                    + ((kuz_pi[(C3 >> 24) & 0xFF] & 0xFF) << 24);
 
-            kuz_l(x, tmp);
+            T0 = (0 + (((C0 >> 24) & 0xFF) << 4)) << 2;
+            T1 = (1 + (((C0 >> 16) & 0xFF) << 4)) << 2;
+            T2 = (2 + (((C0 >> 8) & 0xFF) << 4)) << 2;
+            T3 = (3 + (((C0 >> 0) & 0xFF) << 4)) << 2;
+
+            A0 = gf256res[T0 + 0] ^ gf256res[T1 + 0] ^ gf256res[T2 + 0] ^ gf256res[T3 + 0];
+            A1 = gf256res[T0 + 1] ^ gf256res[T1 + 1] ^ gf256res[T2 + 1] ^ gf256res[T3 + 1];
+            A2 = gf256res[T0 + 2] ^ gf256res[T1 + 2] ^ gf256res[T2 + 2] ^ gf256res[T3 + 2];
+            A3 = gf256res[T0 + 3] ^ gf256res[T1 + 3] ^ gf256res[T2 + 3] ^ gf256res[T3 + 3];
+
+
+            T0 = (4 + (((C1 >> 24) & 0xFF) << 4)) << 2;
+            T1 = (5 + (((C1 >> 16) & 0xFF) << 4)) << 2;
+            T2 = (6 + (((C1 >> 8) & 0xFF) << 4)) << 2;
+            T3 = (7 + (((C1 >> 0) & 0xFF) << 4)) << 2;
+            A0 = A0 ^ gf256res[T0 + 0] ^ gf256res[T1 + 0] ^ gf256res[T2 + 0] ^ gf256res[T3 + 0];
+            A1 = A1 ^ gf256res[T0 + 1] ^ gf256res[T1 + 1] ^ gf256res[T2 + 1] ^ gf256res[T3 + 1];
+            A2 = A2 ^ gf256res[T0 + 2] ^ gf256res[T1 + 2] ^ gf256res[T2 + 2] ^ gf256res[T3 + 2];
+            A3 = A3 ^ gf256res[T0 + 3] ^ gf256res[T1 + 3] ^ gf256res[T2 + 3] ^ gf256res[T3 + 3];
+
+
+            T0 = (8 + (((C2 >> 24) & 0xFF) << 4)) << 2;
+            T1 = (9 + (((C2 >> 16) & 0xFF) << 4)) << 2;
+            T2 = (10 + (((C2 >> 8) & 0xFF) << 4)) << 2;
+            T3 = (11 + (((C2 >> 0) & 0xFF) << 4)) << 2;
+            A0 = A0 ^ gf256res[T0 + 0] ^ gf256res[T1 + 0] ^ gf256res[T2 + 0] ^ gf256res[T3 + 0];
+            A1 = A1 ^ gf256res[T0 + 1] ^ gf256res[T1 + 1] ^ gf256res[T2 + 1] ^ gf256res[T3 + 1];
+            A2 = A2 ^ gf256res[T0 + 2] ^ gf256res[T1 + 2] ^ gf256res[T2 + 2] ^ gf256res[T3 + 2];
+            A3 = A3 ^ gf256res[T0 + 3] ^ gf256res[T1 + 3] ^ gf256res[T2 + 3] ^ gf256res[T3 + 3];
+
+
+            T0 = (12 + (((C3 >> 24) & 0xFF) << 4)) << 2;
+            T1 = (13 + (((C3 >> 16) & 0xFF) << 4)) << 2;
+            T2 = (14 + (((C3 >> 8) & 0xFF) << 4)) << 2;
+            T3 = (15 + (((C3 >> 0) & 0xFF) << 4)) << 2;
+            C0 = A0 ^ gf256res[T0 + 0] ^ gf256res[T1 + 0] ^ gf256res[T2 + 0] ^ gf256res[T3 + 0];
+            C1 = A1 ^ gf256res[T0 + 1] ^ gf256res[T1 + 1] ^ gf256res[T2 + 1] ^ gf256res[T3 + 1];
+            C2 = A2 ^ gf256res[T0 + 2] ^ gf256res[T1 + 2] ^ gf256res[T2 + 2] ^ gf256res[T3 + 2];
+            C3 = A3 ^ gf256res[T0 + 3] ^ gf256res[T1 + 3] ^ gf256res[T2 + 3] ^ gf256res[T3 + 3];
         }
 
-        x[0] = x[0] ^ key[9][0];
-        x[1] = x[1] ^ key[9][1];
-        x[2] = x[2] ^ key[9][2];
-        x[3] = x[3] ^ key[9][3];
-        Pack.intToBigEndian(x, dest, destOffset);
+        C0 = C0 ^ key[9][0];
+        C1 = C1 ^ key[9][1];
+        C2 = C2 ^ key[9][2];
+        C3 = C3 ^ key[9][3];
+
+        packBlock(dest, destOffset);
     }
 
     @Override
