@@ -1,6 +1,5 @@
 package im.actor.crypto.primitives.streebog;
 
-import im.actor.crypto.primitives.util.ByteStrings;
 import im.actor.crypto.primitives.util.Pack;
 
 public class StreebogFastDigest {
@@ -23,9 +22,6 @@ public class StreebogFastDigest {
     }
 
     public void reset() {
-        // IV:: 01010.. for 256-bit hash, 0000... for 512-bit hash
-        // memset(&sbx->h, hlen == 32 ? 0x01 : 0x00, 64);
-        // memset(&sbx->e, 0x00, 64);
         for (int i = 0; i < 64; i++) {
             if (hashLength == 32) {
                 h[i] = (byte) 0x01;
@@ -35,15 +31,12 @@ public class StreebogFastDigest {
             e[i] = (byte) 0x00;
         }
 
-        // sbx->pt = 63;
-        // sbx->n = 0;
         pt = 63;
         n = 0;
     }
 
     public void update(byte[] in, int offset, int length) {
 
-        // j = sbx->pt;
         int j = pt;
         for (int i = 0; i < length; i++) {
             m[j--] = in[offset + i];
@@ -125,27 +118,6 @@ public class StreebogFastDigest {
         reset();
     }
 
-    //    #define SBOG_LPSti64 \
-//            (sbob_sl64[0][t.b[i]] ^     sbob_sl64[1][t.b[i + 8]] ^  \
-//    sbob_sl64[2][t.b[i + 16]] ^ sbob_sl64[3][t.b[i + 24]] ^ \
-//    sbob_sl64[4][t.b[i + 32]] ^ sbob_sl64[5][t.b[i + 40]] ^ \
-//    sbob_sl64[6][t.b[i + 48]] ^ sbob_sl64[7][t.b[i + 56]])
-
-    private static long SBOG_LPSti64(long[] v, int index) {
-        return SBOG_LPSti64(Pack.longToBigEndian(v), index);
-    }
-
-    private static long SBOG_LPSti64(byte[] t, int i) {
-        return (StreebogTables.sbob_sl64[0][t[i] & 0xFF] ^
-                StreebogTables.sbob_sl64[1][t[i + 8] & 0xFF] ^
-                StreebogTables.sbob_sl64[2][t[i + 16] & 0xFF] ^
-                StreebogTables.sbob_sl64[3][t[i + 24] & 0xFF] ^
-                StreebogTables.sbob_sl64[4][t[i + 32] & 0xFF] ^
-                StreebogTables.sbob_sl64[5][t[i + 40] & 0xFF] ^
-                StreebogTables.sbob_sl64[6][t[i + 48] & 0xFF] ^
-                StreebogTables.sbob_sl64[7][t[i + 56] & 0xFF]);
-    }
-
     private void streebog_g(byte[] h, byte[] m, long n) {
 
         long[] hl = new long[8];
@@ -171,14 +143,70 @@ public class StreebogFastDigest {
         }
         Pack.bigEndianToLong(tt, 0, tmpT);
 
-        tmpK[0] = SBOG_LPSti64(tmpT, 0);
-        tmpK[1] = SBOG_LPSti64(tmpT, 1);
-        tmpK[2] = SBOG_LPSti64(tmpT, 2);
-        tmpK[3] = SBOG_LPSti64(tmpT, 3);
-        tmpK[4] = SBOG_LPSti64(tmpT, 4);
-        tmpK[5] = SBOG_LPSti64(tmpT, 5);
-        tmpK[6] = SBOG_LPSti64(tmpT, 6);
-        tmpK[7] = SBOG_LPSti64(tmpT, 7);
+        tmpK[0] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 56) & 0xFF)] ^
+                StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 56) & 0xFF)] ^
+                StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 56) & 0xFF)] ^
+                StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 56) & 0xFF)] ^
+                StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 56) & 0xFF)] ^
+                StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 56) & 0xFF)] ^
+                StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 56) & 0xFF)] ^
+                StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 56) & 0xFF)];
+        tmpK[1] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 48) & 0xFF)] ^
+                StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 48) & 0xFF)] ^
+                StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 48) & 0xFF)] ^
+                StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 48) & 0xFF)] ^
+                StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 48) & 0xFF)] ^
+                StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 48) & 0xFF)] ^
+                StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 48) & 0xFF)] ^
+                StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 48) & 0xFF)];
+        tmpK[2] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 40) & 0xFF)] ^
+                StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 40) & 0xFF)] ^
+                StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 40) & 0xFF)] ^
+                StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 40) & 0xFF)] ^
+                StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 40) & 0xFF)] ^
+                StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 40) & 0xFF)] ^
+                StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 40) & 0xFF)] ^
+                StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 40) & 0xFF)];
+        tmpK[3] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 32) & 0xFF)] ^
+                StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 32) & 0xFF)] ^
+                StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 32) & 0xFF)] ^
+                StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 32) & 0xFF)] ^
+                StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 32) & 0xFF)] ^
+                StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 32) & 0xFF)] ^
+                StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 32) & 0xFF)] ^
+                StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 32) & 0xFF)];
+        tmpK[4] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 24) & 0xFF)] ^
+                StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 24) & 0xFF)] ^
+                StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 24) & 0xFF)] ^
+                StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 24) & 0xFF)] ^
+                StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 24) & 0xFF)] ^
+                StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 24) & 0xFF)] ^
+                StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 24) & 0xFF)] ^
+                StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 24) & 0xFF)];
+        tmpK[5] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 16) & 0xFF)] ^
+                StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 16) & 0xFF)] ^
+                StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 16) & 0xFF)] ^
+                StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 16) & 0xFF)] ^
+                StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 16) & 0xFF)] ^
+                StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 16) & 0xFF)] ^
+                StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 16) & 0xFF)] ^
+                StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 16) & 0xFF)];
+        tmpK[6] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 8) & 0xFF)] ^
+                StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 8) & 0xFF)] ^
+                StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 8) & 0xFF)] ^
+                StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 8) & 0xFF)] ^
+                StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 8) & 0xFF)] ^
+                StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 8) & 0xFF)] ^
+                StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 8) & 0xFF)] ^
+                StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 8) & 0xFF)];
+        tmpK[7] = StreebogTables.sbob_sl64[0][(int) (tmpT[0] & 0xFF)] ^
+                StreebogTables.sbob_sl64[1][(int) (tmpT[1] & 0xFF)] ^
+                StreebogTables.sbob_sl64[2][(int) (tmpT[2] & 0xFF)] ^
+                StreebogTables.sbob_sl64[3][(int) (tmpT[3] & 0xFF)] ^
+                StreebogTables.sbob_sl64[4][(int) (tmpT[4] & 0xFF)] ^
+                StreebogTables.sbob_sl64[5][(int) (tmpT[5] & 0xFF)] ^
+                StreebogTables.sbob_sl64[6][(int) (tmpT[6] & 0xFF)] ^
+                StreebogTables.sbob_sl64[7][(int) (tmpT[7] & 0xFF)];
 
         tmpS[0] = ml[0];
         tmpS[1] = ml[1];
@@ -200,15 +228,70 @@ public class StreebogFastDigest {
             tmpT[6] = tmpS[6] ^ tmpK[6];
             tmpT[7] = tmpS[7] ^ tmpK[7];
 
-
-            tmpS[0] = SBOG_LPSti64(tmpT, 0);
-            tmpS[1] = SBOG_LPSti64(tmpT, 1);
-            tmpS[2] = SBOG_LPSti64(tmpT, 2);
-            tmpS[3] = SBOG_LPSti64(tmpT, 3);
-            tmpS[4] = SBOG_LPSti64(tmpT, 4);
-            tmpS[5] = SBOG_LPSti64(tmpT, 5);
-            tmpS[6] = SBOG_LPSti64(tmpT, 6);
-            tmpS[7] = SBOG_LPSti64(tmpT, 7);
+            tmpS[0] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 56) & 0xFF)];
+            tmpS[1] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 48) & 0xFF)];
+            tmpS[2] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 40) & 0xFF)];
+            tmpS[3] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 32) & 0xFF)];
+            tmpS[4] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 24) & 0xFF)];
+            tmpS[5] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 16) & 0xFF)];
+            tmpS[6] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 8) & 0xFF)];
+            tmpS[7] = StreebogTables.sbob_sl64[0][(int) (tmpT[0] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) (tmpT[1] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) (tmpT[2] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) (tmpT[3] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) (tmpT[4] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) (tmpT[5] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) (tmpT[6] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) (tmpT[7] & 0xFF)];
 
             tmpT[0] = tmpK[0] ^ StreebogTables.sbob_rc64[r][0];
             tmpT[1] = tmpK[1] ^ StreebogTables.sbob_rc64[r][1];
@@ -219,14 +302,71 @@ public class StreebogFastDigest {
             tmpT[6] = tmpK[6] ^ StreebogTables.sbob_rc64[r][6];
             tmpT[7] = tmpK[7] ^ StreebogTables.sbob_rc64[r][7];
 
-            tmpK[0] = SBOG_LPSti64(tmpT, 0);
-            tmpK[1] = SBOG_LPSti64(tmpT, 1);
-            tmpK[2] = SBOG_LPSti64(tmpT, 2);
-            tmpK[3] = SBOG_LPSti64(tmpT, 3);
-            tmpK[4] = SBOG_LPSti64(tmpT, 4);
-            tmpK[5] = SBOG_LPSti64(tmpT, 5);
-            tmpK[6] = SBOG_LPSti64(tmpT, 6);
-            tmpK[7] = SBOG_LPSti64(tmpT, 7);
+
+            tmpK[0] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 56) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 56) & 0xFF)];
+            tmpK[1] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 48) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 48) & 0xFF)];
+            tmpK[2] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 40) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 40) & 0xFF)];
+            tmpK[3] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 32) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 32) & 0xFF)];
+            tmpK[4] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 24) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 24) & 0xFF)];
+            tmpK[5] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 16) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 16) & 0xFF)];
+            tmpK[6] = StreebogTables.sbob_sl64[0][(int) ((tmpT[0] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) ((tmpT[1] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) ((tmpT[2] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) ((tmpT[3] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) ((tmpT[4] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) ((tmpT[5] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) ((tmpT[6] >> 8) & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) ((tmpT[7] >> 8) & 0xFF)];
+            tmpK[7] = StreebogTables.sbob_sl64[0][(int) (tmpT[0] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[1][(int) (tmpT[1] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[2][(int) (tmpT[2] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[3][(int) (tmpT[3] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[4][(int) (tmpT[4] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[5][(int) (tmpT[5] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[6][(int) (tmpT[6] & 0xFF)] ^
+                    StreebogTables.sbob_sl64[7][(int) (tmpT[7] & 0xFF)];
         }
 
         hl[0] = hl[0] ^ tmpS[0] ^ tmpK[0] ^ ml[0];
