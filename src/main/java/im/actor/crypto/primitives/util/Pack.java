@@ -92,6 +92,13 @@ public abstract class Pack {
         }
     }
 
+    public static void longToBigEndian(long[] ns, byte[] bs, int off, int count) {
+        for (int i = 0; i < count; ++i) {
+            longToBigEndian(ns[i], bs, off);
+            off += 8;
+        }
+    }
+
     public static int littleEndianToInt(byte[] bs, int off) {
         int n = bs[off] & 0xff;
         n |= (bs[++off] & 0xff) << 8;
